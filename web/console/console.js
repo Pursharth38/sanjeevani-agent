@@ -24,6 +24,7 @@
   const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const TYPE_CPS = 40;
+  const RES_MS = 300;   // FHIR card reveals one resource line this often (orchestrator paces to match)
 
   const ui = {
     gen: 0, queue: [], busy: false, paused: false, phase: 'idle', feedPhase: null,
@@ -312,6 +313,19 @@
         const box = el('div', 'ocr', `${evt.src ? `<img src="${esc(media(evt.src))}" alt="Sample prescription">` : '<span></span>'}<pre class="json">${json ? highlight(json) : ''}</pre>`);
         body.appendChild(box);
         append(r);
+        break;
+      }
+      case 'fhir': {
+        // FHIR bundle card: one line per resource, revealed in turn, then the full Bundle JSON.
+        const list = el('div', 'res');
+        body.appendChild(list);
+        append(r);
+        for (const res of evt.resources || []) {
+          list.appendChild(el('div', 'res-row', `<span class="res-t">${esc(res.type)}</span><span>${esc(res.text)}</span>`));
+          stick();
+          if (!instant && !(await wait(RES_MS, gen))) return;
+        }
+        if (json) body.appendChild(jsonBlock(json, 'FHIR Bundle JSON'));
         break;
       }
       case 'pay_page':

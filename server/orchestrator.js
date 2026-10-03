@@ -66,6 +66,7 @@ const EVENT_GAP_MS = 700;       // pause between events a module returns at once
 const TYPE_CPS = 40;            // console types reasoning at this speed (plan section 8)
 const LINE_MS = 700;            // console reveals transcript lines at this pace
 const TIMECARD_MS = 1600;       // console shows a full-screen time card this long
+const RES_MS = 300;             // console reveals one FHIR resource line this often
 const WEBHOOK_MAX_BYTES = 1 << 20;
 
 /* ---------------- Run state ---------------- */
@@ -129,6 +130,7 @@ function animMs(e) {
     return Math.ceil((String(text).length / TYPE_CPS) * 1000) + EVENT_GAP_MS;
   }
   if (e.type === 'transcript') return (Array.isArray(e.lines) ? e.lines.length : 0) * LINE_MS + EVENT_GAP_MS;
+  if (e.type === 'fhir') return (Array.isArray(e.resources) ? e.resources.length : 0) * RES_MS + EVENT_GAP_MS;
   return EVENT_GAP_MS;
 }
 
@@ -257,6 +259,7 @@ async function playScripted(steps, token) {
   for (const s of steps) {
     if (s.kind === 'event') { emit(s.event, token); await sleep(EVENT_GAP_MS, token); }
     else if (s.kind === 'module') await runModule(s.name, null, token);
+    else if (s.kind === 'patch') store.apply(s.patch);
     else if (s.kind === 'whatsapp') {
       const r = await runModule('whatsapp', s.step, token);
       if (r.result && r.result.halt) throw new Halted(`HOLD at ${s.step.step}`);

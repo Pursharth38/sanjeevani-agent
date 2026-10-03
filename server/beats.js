@@ -24,7 +24,8 @@ export const PREROLL = [
   wa('confirm_medicine_name', { options: ['Amlodipine', 'Amlokind'] }),  // asks; Pursharth replies "Amlodipine"
   mod('fhir'),
   wa('away_mode'),                                                  // "Flying to Delhi, back Sunday" → "Got it ✈ …"
-  say('agent', 'SCRIPTED', 'info', 'caregiver.away = true · backup = Rohan', { body: 'Pursharth flies to Delhi, back Sun 11 Oct' })
+  say('agent', 'SCRIPTED', 'info', 'caregiver.away = true · backup = Rohan', { body: 'Pursharth flies to Delhi, back Sun 11 Oct' }),
+  { kind: 'patch', patch: { caregiver: { away: true } } }
 ];
 
 // After a completed run: "Landed" → the welcome-back summary.
