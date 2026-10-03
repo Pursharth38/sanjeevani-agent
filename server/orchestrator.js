@@ -3,42 +3,55 @@
 //   pre-roll (records, away mode) → trigger → hf_reason plans → each plan step runs its module(s)
 //   in order → simulated delivery → summary
 //
-// Every step resolves only when it has really finished (call ended, webhook received, HOLD window
-// over). The orchestrator enforces the caregiver's limits on every step, whatever the model wrote.
-// The dashboard is not synced. state.js holds internal story state that modules read via ctx.state.
+// Every step resolves only when it has really finished (call ended, payment confirmed, the teammate
+// tapped Sent ✓ on the cue page). The orchestrator enforces the caregiver's limits on every step,
+// whatever the model wrote. The dashboard is not synced. state.js holds internal story state that
+// modules read via ctx.state.
+//
+// WhatsApp is manual: a teammate's phone is "Sanjeevani" and sends each message from the cue page
+// (/cue on the same Wi-Fi). When a WhatsApp step starts, {"beat": N, "step": …} goes out on
+// /cue-stream; whatsapp.run() resolves when the teammate taps Sent ✓ / Received ✓ (POST /cue/ack).
 //
 //   MODE=replay npm run demo     modules replay their cache/ (default; the offline backup take)
 //   MODE=live npm run demo       modules call the real APIs
 //   PREROLL=0                    start at the trigger
 //   HOLD_WINDOW_S=10             the 10-minute HOLD window, compressed for the demo
 //
-// HTTP (bound to 127.0.0.1; through ngrok only /webhooks/* is reachable)
-//   /console/  /onboarding/  /dashboard/ (static, unsynced)  /data/docs/*  /data/audio/*
+// HTTP (bound to all interfaces so the teammate's phone can reach /cue; from any other device only
+// the cue routes, /data/* and /webhooks/* answer — run controls and the console are laptop-only)
+//   /console/  /onboarding/  /dashboard/ (static, unsynced)  /cue/  /data/*
 //   GET  /events             SSE for the agent console   (hello, phase, evt, control)
+//   GET  /cue-stream         SSE for the cue page: unnamed messages {"beat": N, "step": …}; {"beat": 0} on reset
+//   POST /cue/ack            JSON body → whatsapp.onCueAck(body) → its { status, type, body }
 //   GET  /status             run status as JSON;  GET /state.json  internal story state (debug)
 //   POST /next  /reset  /pause
 //   ANY  /webhooks/<module>  → that module's onWebhook({ method, headers, rawBody, body, query, url })
 // Keys (in this terminal): Space start · R reset · P pause · Q quit
 //
 // Module contract
-//   run(ctx), ctx = { state, mode: "live" | "replay", phase, step, emit, signal }
-//     step    the plan step with its arguments (null for pre-roll and hf_reason)
-//     emit    emit(event) streams a console event now (transcript lines, countdown, awaiting webhook)
+//   run(ctx), ctx = { state, mode: "live" | "replay", phase, step, emit, cue, signal }
+//     step    the step with its arguments (plan steps; WhatsApp pre-roll/landing steps such as
+//             { step: "documents_received" }; null for hf_ocr, fhir and hf_reason)
+//     emit    emit(event) streams a console event now (transcript lines, countdown, WhatsApp rows)
+//     cue     cue(payload) pushes a custom message on /cue-stream
 //     signal  AbortSignal: fires on timeout or reset
 //   returns { events, statePatch, artifacts, result }
-//     result  notify_caregiver { hold, reply } · book_appointment { confirmed, slot }
+//     result  any step: { halt: true } stops the run (the teammate tapped HOLD)
+//             notify_caregiver { hold, reply } · book_appointment { confirmed, slot }
 //             create_order { status: PROCESSED | SIMULATED, order_id } · route_delivery { serviceable, route }
 //             hf_reason { decision, plan, model }
+//   whatsapp.js also exports onCueAck(body) and resetCue() (called on R).
 // Fallback per call: live → replay (module's cache/) → fixtures/<module>.<step>.json → fixtures/<module>.json
 // → a visible "missing" row. Fixture events carry `fixture: true` and must never appear in a recording.
 import http from 'node:http';
+import os from 'node:os';
 import readline from 'node:readline';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, normalize, extname, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import * as store from './state.js';
 import { ROOT, readFixture, maskSecrets } from './cache.js';
-import { STORY, PREROLL, TRIGGER, STEP_MODULES, ACTION_STEPS, TIMEOUT_S, FALLBACK_PLAN, DELIVERED, SUMMARY_PATCH } from './beats.js';
+import { STORY, PREROLL, TRIGGER, STEP_MODULES, ACTION_STEPS, TIMEOUT_S, FALLBACK_PLAN, DELIVERED, SUMMARY_PATCH, SUMMARY_WHATSAPP, CUE_BEAT } from './beats.js';
 
 try { process.loadEnvFile(join(ROOT, '.env')); } catch { /* no .env: replay still works */ }
 
@@ -64,8 +77,11 @@ let seq = 0;
 let history = [];               // console events since the last reset (replayed to late joiners)
 let aborters = new Set();       // in-flight module calls, aborted on reset
 const consoleClients = new Set();
+const cueClients = new Set();
+let lastCue = { beat: 0 };      // replayed to a cue page that (re)connects
 
 class Cancelled extends Error {}
+class Halted extends Error {}   // the teammate tapped HOLD on the cue page
 
 const log = (...a) => console.log(`[${new Date().toTimeString().slice(0, 8)}]`, ...a);
 const agentLabel = () => (MODE === 'live' ? 'LIVE' : 'CACHED');
@@ -77,7 +93,12 @@ function send(res, event, data) {
 function broadcast(event, data) {
   for (const res of consoleClients) send(res, event, data);
 }
-setInterval(() => { for (const res of consoleClients) res.write(': keepalive\n\n'); }, 15000).unref();
+// The cue page listens with onmessage, so cue messages are unnamed.
+function pushCue(payload) {
+  lastCue = payload;
+  for (const res of cueClients) res.write(`data: ${JSON.stringify(payload)}\n\n`);
+}
+setInterval(() => { for (const res of [...consoleClients, ...cueClients]) res.write(': keepalive\n\n'); }, 15000).unref();
 
 /* ---------------- Story clock ---------------- */
 // Story time runs at real speed from an anchor; phases re-anchor it (Tue 09:58, Thu delivery…).
@@ -174,7 +195,8 @@ function abortPromise(signal) {
 async function callModule(name, step, token) {
   const mod = await loadModule(name);
   const key = step ? step.step : name;
-  const timeoutS = TIMEOUT_S[key] || 60;
+  const timeoutS = (name === 'whatsapp' ? TIMEOUT_S.whatsapp : TIMEOUT_S[key]) || 60;
+  if (name === 'whatsapp' && step) pushCue({ beat: CUE_BEAT[step.step] ?? null, step: step.step });
   if (mod && typeof mod.run === 'function') {
     for (const mode of MODE === 'live' ? ['live', 'replay'] : ['replay']) {
       const ac = new AbortController();
@@ -183,7 +205,8 @@ async function callModule(name, step, token) {
       const ctx = {
         state: structuredClone(store.get()), mode, phase, signal: ac.signal,
         step: step ? structuredClone(step) : null,
-        emit: (e) => emit(withSource(name, e), token)
+        emit: (e) => emit(withSource(name, e), token),
+        cue: (payload) => { if (token === runToken) pushCue(payload); }
       };
       try {
         const r = await Promise.race([mod.run(ctx), abortPromise(ac.signal)]);
@@ -232,6 +255,10 @@ async function playScripted(steps, token) {
   for (const s of steps) {
     if (s.kind === 'event') { emit(s.event, token); await sleep(EVENT_GAP_MS, token); }
     else if (s.kind === 'module') await runModule(s.name, null, token);
+    else if (s.kind === 'whatsapp') {
+      const r = await runModule('whatsapp', s.step, token);
+      if (r.result && r.result.halt) throw new Halted(`HOLD at ${s.step.step}`);
+    }
   }
 }
 
@@ -292,6 +319,7 @@ async function runStep(step, facts, token) {
   let last = null;
   for (const name of STEP_MODULES[step.step]) {
     const r = await runModule(name, args, token);
+    if (r.result && r.result.halt) return { ok: false, stop: 'hold', reason: 'HOLD received' };
     if (r.via === 'missing') return { ok: false, reason: `${name} unavailable` };
     if (r.artifacts && r.artifacts.audio) args.audio = r.artifacts.audio;   // gnani TTS → whatsapp
     last = r;
@@ -408,6 +436,7 @@ async function runAgent(token) {
       setPhase('summary', 'Caregiver lands', STORY.summary);
       await sleep(TIMECARD_MS, token);
       store.apply(SUMMARY_PATCH);
+      await runModule('whatsapp', { ...SUMMARY_WHATSAPP, actions: outcome.completed }, token);
       agent(`summary · ${n}, 0 missed`, token);
     } else {
       setPhase('summary', 'Stopped');
@@ -415,7 +444,13 @@ async function runAgent(token) {
     }
     log(outcome.ok ? '■ run complete' : `■ run stopped: ${outcome.stopped}`);
   } catch (e) {
-    if (!(e instanceof Cancelled)) {
+    if (e instanceof Halted) {
+      outcome = { ok: false, completed: [], stopped: e.message };
+      currentStep = null;
+      setPhase('summary', 'Stopped');
+      agent(`stopped · ${e.message}`, token);
+      log(`■ run stopped: ${e.message}`);
+    } else if (!(e instanceof Cancelled)) {
       log(`  ! run failed: ${e.stack || e.message}`);
       agent('run failed', token, { body: e.message });
     }
@@ -439,6 +474,10 @@ function doReset() {
   store.reset();
   setClock(STORY.preroll);
   broadcast('control', { action: 'reset' });
+  pushCue({ beat: 0 });
+  loadModule('whatsapp')
+    .then((m) => m && typeof m.resetCue === 'function' && m.resetCue())
+    .catch((e) => log(`  ! whatsapp.resetCue failed: ${e.message}`));
   log('■ reset');
 }
 
@@ -484,7 +523,7 @@ async function handleWebhook(req, res, name, url) {
     if (type.includes('application/json')) body = rawBody ? JSON.parse(rawBody) : {};
     else if (type.includes('application/x-www-form-urlencoded')) body = Object.fromEntries(new URLSearchParams(rawBody));
   } catch { /* leave body as the raw string */ }
-  // The public URL as the sender signed it (Twilio signs the full URL; ngrok sets X-Forwarded-*).
+  // The public URL as the sender saw it (ngrok sets X-Forwarded-*), for signature checks.
   const proto = String(req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
   const host = String(req.headers['x-forwarded-host'] || req.headers.host || 'localhost').split(',')[0].trim();
   log(`  ← webhook ${name} (${req.method})`);
@@ -505,13 +544,35 @@ async function handleWebhook(req, res, name, url) {
   }
 }
 
+/* ---------------- Cue page ---------------- */
+async function handleCueAck(req, res) {
+  const mod = await loadModule('whatsapp');
+  if (!mod || typeof mod.onCueAck !== 'function') return sendJson(res, 404, { error: 'whatsapp.onCueAck not available' });
+  let body;
+  try {
+    const raw = await readBody(req);
+    body = raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return sendJson(res, 400, { error: `bad JSON body: ${e.message}` });
+  }
+  try {
+    const r = (await mod.onCueAck(body)) || {};
+    const out = r.body == null ? '' : typeof r.body === 'string' ? r.body : JSON.stringify(r.body);
+    res.writeHead(r.status || 200, { 'Content-Type': r.type || (typeof r.body === 'string' ? 'text/plain; charset=utf-8' : TYPES['.json']), 'Cache-Control': 'no-store' });
+    res.end(out);
+  } catch (e) {
+    log(`  ! whatsapp.onCueAck failed: ${e.message}`);
+    sendJson(res, 500, { error: 'cue ack failed' });
+  }
+}
+
 /* ---------------- HTTP ---------------- */
 const STATIC = {
   '/console/': join(ROOT, 'web', 'console'),
   '/onboarding/': join(ROOT, 'web', 'onboarding'),
   '/dashboard/': join(ROOT, 'web', 'dashboard'),
-  '/data/docs/': join(ROOT, 'data', 'docs'),
-  '/data/audio/': join(ROOT, 'data', 'audio')
+  '/cue/': join(ROOT, 'web', 'cue'),
+  '/data/': join(ROOT, 'data')
 };
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
@@ -544,8 +605,15 @@ function serveStatic(res, pathname) {
   return true;
 }
 
-// ngrok forwards from 127.0.0.1 too, so proxied requests are recognised by their forwarding headers.
+// The laptop itself gets everything. Any other device (the teammate's phone on Wi-Fi, or anything
+// arriving through ngrok, which forwards from 127.0.0.1 but sets forwarding headers) only gets the
+// cue page, its stream and ack, /data/* and /webhooks/*.
+const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 const isProxied = (req) => Boolean(req.headers['x-forwarded-for'] || req.headers['x-forwarded-host'] || req.headers['ngrok-trace-id']);
+const isLaptop = (req) => LOOPBACK.has(req.socket.remoteAddress) && !isProxied(req);
+const remoteAllowed = (method, p) =>
+  (method === 'POST' && p === '/cue/ack') ||
+  ((method === 'GET' || method === 'HEAD') && (p === '/cue' || p.startsWith('/cue/') || p === '/cue-stream' || p.startsWith('/data/')));
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
@@ -553,7 +621,8 @@ const server = http.createServer((req, res) => {
 
   const hook = p.match(/^\/webhooks\/([a-z_]+)\/?$/);
   if (hook) return handleWebhook(req, res, hook[1], url);
-  if (isProxied(req)) return sendJson(res, 403, { error: 'only /webhooks/* is reachable from outside' });
+  if (!isLaptop(req) && !remoteAllowed(req.method, p)) return sendJson(res, 403, { error: 'only the cue page is reachable from other devices' });
+  if (req.method === 'POST' && p === '/cue/ack') return handleCueAck(req, res);
 
   if (req.method === 'POST') {
     if (p === '/next') return sendJson(res, 200, { ok: start(), ...status() });
@@ -564,7 +633,7 @@ const server = http.createServer((req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return sendJson(res, 405, { error: 'method not allowed' });
 
   if (p === '/') { res.writeHead(302, { Location: '/console/' }); return res.end(); }
-  if (['/console', '/onboarding', '/dashboard'].includes(p)) { res.writeHead(301, { Location: p + '/' }); return res.end(); }
+  if (['/console', '/onboarding', '/dashboard', '/cue'].includes(p)) { res.writeHead(301, { Location: p + '/' }); return res.end(); }
   if (p === '/state.json') return sendJson(res, 200, store.json());
   if (p === '/status') return sendJson(res, 200, status());
   if (p === '/events') {
@@ -573,6 +642,13 @@ const server = http.createServer((req, res) => {
     send(res, 'hello', { ...status(), history });
     consoleClients.add(res);
     req.on('close', () => consoleClients.delete(res));
+    return;
+  }
+  if (p === '/cue-stream') {
+    res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive' });
+    res.write(`retry: 1000\n\ndata: ${JSON.stringify(lastCue)}\n\n`);
+    cueClients.add(res);
+    req.on('close', () => cueClients.delete(res));
     return;
   }
   if (serveStatic(res, p)) return;
@@ -593,11 +669,19 @@ function keyboard() {
 }
 
 /* ---------------- Boot ---------------- */
+function lanAddress() {
+  for (const list of Object.values(os.networkInterfaces())) {
+    for (const a of list || []) if (a.family === 'IPv4' && !a.internal) return a.address;
+  }
+  return null;
+}
+
 store.reset();
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, '0.0.0.0', () => {
+  const lan = lanAddress();
   console.log(`\nSanjeevani agent runner · MODE=${MODE} · pre-roll ${PREROLL_ON ? 'on' : 'off'} · HOLD window ${HOLD_WINDOW_S}s`);
   console.log(`  console    http://localhost:${PORT}/console/`);
-  console.log(`  webhooks   http://localhost:${PORT}/webhooks/<module>   (expose with: ngrok http ${PORT})`);
+  console.log(`  cue        http://${lan || '<laptop-ip>'}:${PORT}/cue   (teammate's phone, same Wi-Fi)`);
   console.log(`  keys       Space start · R reset · P pause · Q quit\n`);
   keyboard();
 });

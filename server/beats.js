@@ -14,14 +14,29 @@ export const STORY = {
 
 const say = (source, label, type, title, extra = {}) => ({ kind: 'event', event: { source, label, type, title, ...extra } });
 const mod = (name) => ({ kind: 'module', name });
+const wa = (step, args = {}) => ({ kind: 'whatsapp', step: { step, ...args } });   // a cued WhatsApp exchange
 
 // Before the trigger: records consolidated and away mode on. Skipped with PREROLL=0.
 export const PREROLL = [
+  wa('documents_received'),                                         // Pursharth forwards 4 documents; Sanjeevani acknowledges
   say('agent', 'SCRIPTED', 'info', 'records · 4 of Maa\'s documents read', { body: 'Prescription, 2 lab reports, discharge summary' }),
   mod('hf_ocr'),
+  wa('confirm_medicine_name', { options: ['Amlodipine', 'Amlokind'] }),  // asks; Pursharth replies "Amlodipine"
   mod('fhir'),
+  wa('away_mode'),                                                  // "Flying to Delhi, back Sunday" → "Got it ✈ …"
   say('agent', 'SCRIPTED', 'info', 'caregiver.away = true · backup = Rohan', { body: 'Pursharth flies to Delhi, back Sun 11 Oct' })
 ];
+
+// After a completed run: "Landed" → the welcome-back summary.
+export const SUMMARY_WHATSAPP = { step: 'caregiver_lands' };
+
+// WhatsApp step → the cue page's beat number (whatsapp_script.json is keyed by these). The
+// orchestrator pushes {"beat": N, "step": …} on /cue-stream when the step starts; whatsapp.js can
+// push its own payload with ctx.cue(). escalate_to_backup has no scripted beat.
+export const CUE_BEAT = {
+  documents_received: 1, confirm_medicine_name: 3, away_mode: 4,
+  notify_caregiver: 7, notify_parent: 12, caregiver_lands: 13
+};
 
 export const TRIGGER = {
   events: [
@@ -48,8 +63,10 @@ export const STEP_MODULES = {
 // Steps that act on the world; notify_caregiver must come before any of them.
 export const ACTION_STEPS = ['book_appointment', 'create_order', 'route_delivery'];
 
-// Seconds before a module call is aborted and fails honestly.
+// Seconds before a module call is aborted and fails honestly. WhatsApp waits on a person tapping
+// Sent ✓ / Received ✓ on the cue page, so every WhatsApp call gets `whatsapp`.
 export const TIMEOUT_S = {
+  whatsapp: 600,
   hf_ocr: 90, fhir: 15, hf_reason: 180,
   notify_caregiver: 120, book_appointment: 420, create_order: 300,
   route_delivery: 45, notify_parent: 180, escalate_to_backup: 120
