@@ -21,7 +21,7 @@ The plan's section 3 (canonical story data) overrides any conflicting dates or n
 Two people build in parallel on separate branches. **Check the current branch before editing** and stay inside that owner's files:
 
 - Branch `pursharth` → **P** owns: `server/integrations/whatsapp.js` (manual cue), `gnani.js`, `hf_ocr.js`, `hf_reason.js`, `web/cue/`, `web/onboarding/`, `data/docs/`, `data/audio/`, `data/whatsapp_script.json`
-- Branch `kavish` → **K** owns: `server/orchestrator.js`, `beats.js` (step → module map, limits, story anchors), `state.js`, `cache.js`, `server/integrations/pinelabs.js`, `delhivery.js`, `fhir.js`, `web/console/`, `data/state.initial.json`. `web/dashboard/` is served static and unsynced; don't edit it.
+- Branch `kavish` → **K** owns: `server/orchestrator.js`, `beats.js` (step → module map, limits, story anchors), `state.js`, `cache.js`, `server/integrations/pinelabs.js`, `delhivery.js`, `fhir.js`, `web/console/`, `web/pay/` (simulated payment window), `data/state.initial.json`. `web/dashboard/` is served static and unsynced; don't edit it.
 - Shared: `fixtures/`, `.env.example`. `cache/<name>.json` is written by each module's own CLI.
 
 If a task needs a change in the other person's files or in a shared contract (section 2 of the team split), stop and say so instead of editing. Contract changes must be agreed with the other person first.
@@ -43,7 +43,7 @@ If a task needs a change in the other person's files or in a shared contract (se
 ## Honesty rules (required)
 
 - Every console event carries a source label: `LIVE`, `SANDBOX`, `SCRIPTED`, `SAMPLE RUN`, `SIMULATED` or `CACHED`.
-- Never fake a real result. Saved model output (`hf_reason`, `hf_ocr`) is stored **unedited** with the model id. Don't fake a Pine Labs `PROCESSED` webhook. Card processing isn't enabled on our UAT merchant account, so (decided 2026-10-04) the Pine Labs token and order are real `SANDBOX` calls and the payment confirmation is `SIMULATED`, in our own wording (`PINELABS_PAYMENT=simulated`, the default; `checkout` runs the real Hosted Checkout).
+- Never fake a real result. Saved model output (`hf_reason`, `hf_ocr`) is stored **unedited** with the model id. Don't fake a Pine Labs `PROCESSED` webhook. Card processing isn't enabled on our UAT merchant account, so (decided 2026-10-04) the Pine Labs token and order are real `SANDBOX` calls and the payment happens on our own simulated payment window (`/pay/`, opened over the console, labelled "Simulated payment · Sanjeevani demo", no Pine Labs branding), confirmed as `SIMULATED` (`PINELABS_PAYMENT=simulated`, the default; `checkout` runs the real Hosted Checkout). Every API row carries `endpoint` (method + URL) and `http` (status) so the console shows exactly what was called.
 - The OCR sample never feeds the dashboard. Delivery completion is simulated (no real courier) and labelled `SIMULATED`.
 - Maa is never sent a pending-action message. Her only touchpoint is the post-delivery voice note.
 - Copy uses family names ("Maa") and never diagnostic language ("abnormal", "diabetic", "high risk").

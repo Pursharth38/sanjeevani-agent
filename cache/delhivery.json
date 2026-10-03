@@ -1,6 +1,6 @@
 {
-  "saved_at": "2026-10-03T19:05:44.100Z",
-  "recorded_at": "2026-10-03T19:05:44.099Z",
+  "saved_at": "2026-10-03T19:27:21.585Z",
+  "recorded_at": "2026-10-03T19:27:21.584Z",
   "serviceability": "simulated",
   "events": [
     {
@@ -9,17 +9,20 @@
       "label": "LIVE",
       "type": "request",
       "title": "pincode lookup · India Post · 226001",
+      "endpoint": "GET https://api.postalpincode.in/pincode/226001",
       "json": {
         "method": "GET",
         "url": "https://api.postalpincode.in/pincode/226001"
       }
     },
     {
-      "dt_ms": 1197,
+      "dt_ms": 1070,
       "source": "agent",
       "label": "LIVE",
       "type": "response",
       "title": "226001 · Lucknow, Uttar Pradesh · 10 post offices",
+      "endpoint": "GET https://api.postalpincode.in/pincode/226001",
+      "http": 200,
       "json": {
         "Status": "Success",
         "Message": "Number of pincode(s) found:10",
@@ -49,15 +52,16 @@
       }
     },
     {
-      "dt_ms": 1197,
+      "dt_ms": 1070,
       "source": "delhivery",
       "label": "SIMULATED",
       "type": "info",
       "title": "delhivery serviceability · 226001 · simulated",
-      "body": "No Delhivery API token; the pincode above is real, this check is simulated"
+      "endpoint": "no API call · GET https://track.delhivery.com/c/api/pin-codes/json/ needs DELHIVERY_TOKEN",
+      "body": "The pincode above is real; this check is simulated"
     },
     {
-      "dt_ms": 2400,
+      "dt_ms": 2271,
       "source": "delhivery",
       "label": "SIMULATED",
       "type": "response",
@@ -71,7 +75,7 @@
       }
     },
     {
-      "dt_ms": 2400,
+      "dt_ms": 2271,
       "source": "agent",
       "label": "SIMULATED",
       "type": "info",

@@ -1,15 +1,16 @@
 {
-  "saved_at": "2026-10-03T18:45:30.849Z",
-  "recorded_at": "2026-10-03T18:45:30.848Z",
+  "saved_at": "2026-10-03T19:27:19.287Z",
+  "recorded_at": "2026-10-03T19:27:19.287Z",
   "base": "https://pluraluat.v2.pinepg.in",
   "payment": "simulated",
   "events": [
     {
-      "dt_ms": 1,
+      "dt_ms": 0,
       "source": "pinelabs",
       "label": "SANDBOX",
       "type": "request",
-      "title": "pinelabs.token · POST /api/auth/v1/token",
+      "title": "pinelabs.token",
+      "endpoint": "POST https://pluraluat.v2.pinepg.in/api/auth/v1/token",
       "json": {
         "client_id": "••••5cd0",
         "client_secret": "••••••••",
@@ -17,25 +18,28 @@
       }
     },
     {
-      "dt_ms": 470,
+      "dt_ms": 383,
       "source": "pinelabs",
       "label": "SANDBOX",
       "type": "response",
-      "title": "token issued · 200",
+      "title": "token issued",
+      "endpoint": "POST https://pluraluat.v2.pinepg.in/api/auth/v1/token",
+      "http": 200,
       "json": {
-        "access_token": "••••u0BQ",
+        "access_token": "••••wAJQ",
         "refresh_token": "••••",
-        "expires_at": "2026-10-03T20:45:28.483Z"
+        "expires_at": "2026-10-03T21:26:58.926Z"
       }
     },
     {
-      "dt_ms": 470,
+      "dt_ms": 383,
       "source": "pinelabs",
       "label": "SANDBOX",
       "type": "request",
       "title": "pinelabs.checkout.create · ₹184",
+      "endpoint": "POST https://pluraluat.v2.pinepg.in/api/checkout/v1/orders",
       "json": {
-        "merchant_order_reference": "SNJ-AMLO-0610-MUSQSEPH",
+        "merchant_order_reference": "SNJ-AMLO-0610-MUSS9SAH",
         "order_amount": {
           "value": 18400,
           "currency": "INR"
@@ -57,42 +61,104 @@
       }
     },
     {
-      "dt_ms": 751,
+      "dt_ms": 731,
       "source": "pinelabs",
       "label": "SANDBOX",
       "type": "response",
-      "title": "Order created · ₹184 · v1-261003184528-aa-Cs78GF",
+      "title": "Order created · ₹184 · v1-261003192659-aa-82sVy0",
+      "endpoint": "POST https://pluraluat.v2.pinepg.in/api/checkout/v1/orders",
+      "http": 200,
       "json": {
         "token": "••••",
-        "order_id": "v1-261003184528-aa-Cs78GF",
+        "order_id": "v1-261003192659-aa-82sVy0",
         "redirect_url": "https://pluraluat.v2.pinepg.in/api/v3/checkout-bff/redirect/checkout?token=••••",
         "response_code": 200,
         "response_message": "Order Creation Successful."
       }
     },
     {
-      "dt_ms": 751,
+      "dt_ms": 731,
       "source": "pinelabs",
       "label": "SIMULATED",
-      "type": "info",
-      "title": "payment · simulated card payment",
-      "body": "The Pine Labs UAT order above is real; this payment step is simulated"
+      "type": "pay_page",
+      "title": "payment window · simulated",
+      "body": "Sanjeevani demo payment page · no money moves",
+      "endpoint": "GET /pay/",
+      "src": "/pay/?s=SIM-53E6A289",
+      "pay_part": true
     },
     {
-      "dt_ms": 2753,
+      "dt_ms": 20733,
+      "source": "pinelabs",
+      "label": "SIMULATED",
+      "type": "request",
+      "title": "confirm test payment",
+      "endpoint": "POST /pay/confirm",
+      "pay_part": true,
+      "json": {
+        "session_id": "SIM-53E6A289",
+        "pinelabs_order_id": "v1-261003192659-aa-82sVy0",
+        "amount_inr": 184,
+        "method": "Test card •••• 1112"
+      }
+    },
+    {
+      "dt_ms": 20733,
       "source": "pinelabs",
       "label": "SIMULATED",
       "type": "response",
       "title": "payment confirmed · ₹184 · simulated",
+      "endpoint": "POST /pay/confirm",
+      "http": 200,
+      "pay_part": true,
+      "pay_close": true,
       "json": {
         "simulated": true,
-        "pinelabs_order_id": "v1-261003184528-aa-Cs78GF",
-        "merchant_order_reference": "SNJ-AMLO-0610-MUSQSEPH",
+        "payment_id": "SIM-PAY-594E8DC5",
+        "pinelabs_order_id": "v1-261003192659-aa-82sVy0",
+        "merchant_order_reference": "SNJ-AMLO-0610-MUSS9SAH",
         "amount_inr": 184,
-        "method": "card (test)"
+        "confirmed_by": "timer (no payment window open)"
       }
     }
   ],
+  "pay_info": {
+    "order": {
+      "item": "Amlodipine 5mg × 30",
+      "pharmacy": "Apollo Pharmacy, Lucknow",
+      "customer": "Pursharth",
+      "amount_inr": 184,
+      "pinelabs_order_id": "v1-261003192659-aa-82sVy0",
+      "merchant_order_reference": "SNJ-AMLO-0610-MUSS9SAH",
+      "card": "Test card •••• 1112"
+    },
+    "endpoints": [
+      {
+        "method": "POST",
+        "url": "https://pluraluat.v2.pinepg.in/api/auth/v1/token",
+        "status": 200,
+        "label": "SANDBOX"
+      },
+      {
+        "method": "POST",
+        "url": "https://pluraluat.v2.pinepg.in/api/checkout/v1/orders",
+        "status": 200,
+        "label": "SANDBOX"
+      },
+      {
+        "method": "GET",
+        "url": "/pay/session",
+        "status": 200,
+        "label": "SIMULATED"
+      },
+      {
+        "method": "POST",
+        "url": "/pay/confirm",
+        "status": null,
+        "label": "SIMULATED"
+      }
+    ]
+  },
   "statePatch": {
     "mandate": {
       "used": 1184,
@@ -101,7 +167,8 @@
   },
   "result": {
     "status": "SIMULATED",
-    "order_id": "v1-261003184528-aa-Cs78GF",
-    "confirmed_via": "simulated"
+    "order_id": "v1-261003192659-aa-82sVy0",
+    "payment_id": "SIM-PAY-594E8DC5",
+    "confirmed_via": "timer (no payment window open)"
   }
 }

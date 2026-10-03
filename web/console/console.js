@@ -181,6 +181,16 @@
     append(el('div', 'divider', `${esc(PHASES[evt.phase] || evt.phase)}${s ? ` <span class="dc">${esc(`${s.wd} ${s.d} ${s.mon}`)}</span>` : ''}`));
   }
 
+  // "POST https://…/api/checkout/v1/orders → 200": every API call shows its exact endpoint.
+  function endpointLine(evt) {
+    if (!evt.endpoint) return '';
+    const m = String(evt.endpoint).match(/^(GET|POST|PUT|PATCH|DELETE|HEAD)\s+(.*)$/);
+    const http = evt.http ? ` <span class="ep-s${evt.http >= 400 ? ' bad' : ''}">→ ${esc(evt.http)}</span>` : '';
+    return m
+      ? `<div class="ep"><span class="ep-m">${esc(m[1])}</span> ${esc(m[2])}${http}</div>`
+      : `<div class="ep">${esc(evt.endpoint)}${http}</div>`;
+  }
+
   function row(evt, instant) {
     const src = SOURCES[evt.source] || [evt.source || '?', '--muted'];
     const s = story(evt.t);
@@ -191,7 +201,7 @@
       evt.recorded_at ? `<span class="rec">${esc(recorded(evt.recorded_at))}</span>` : '',
       evt.fixture ? '<span class="flag">FIXTURE</span>' : ''
     ].join('');
-    body.innerHTML = `<div class="head"><span class="title">${esc(evt.title)}</span>${flags}</div>${evt.body ? `<div class="sub">${esc(evt.body)}</div>` : ''}`;
+    body.innerHTML = `<div class="head"><span class="title">${esc(evt.title)}</span>${flags}</div>${endpointLine(evt)}${evt.body ? `<div class="sub">${esc(evt.body)}</div>` : ''}`;
     r.innerHTML = `<span class="t">${s ? esc(`${s.wd} ${s.hms}`) : ''}</span><span><span class="chip" style="--c: var(${src[1]})">${esc(src[0])}</span></span>`;
     r.appendChild(body);
     return { r, body };
@@ -304,6 +314,10 @@
         append(r);
         break;
       }
+      case 'pay_page':
+        append(r);
+        if (!instant) payWindow(evt.src);
+        break;
       default:
         if (evt.link) {
           const a = el('a', 'link', 'Open Pine Labs checkout ↗');
@@ -315,7 +329,15 @@
         if (json) body.appendChild(jsonBlock(json, evt.type === 'request' ? 'request' : evt.type === 'response' ? 'response' : 'details'));
         append(r);
     }
+    if (evt.pay_close && !instant) setTimeout(() => payWindow(null), 1600);
     scheduleState();
+  }
+
+  // The simulated payment window sits over the console while the payment step waits for it.
+  function payWindow(src) {
+    const box = $('#payWindow');
+    if (src) { $('#payFrame').src = src; box.classList.add('on'); }
+    else { box.classList.remove('on'); $('#payFrame').src = 'about:blank'; }
   }
 
   function enqueue(evt, instant) {
@@ -363,6 +385,7 @@
     setPhase('idle');
     show('#endCard', false);
     show('#timeCard', false);
+    payWindow(null);
   }
 
   /* ---------------- Stream ---------------- */

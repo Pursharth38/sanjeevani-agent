@@ -4,9 +4,13 @@
 //   node server/integrations/pinelabs.js --replay   print the cached run
 //
 // PINELABS_PAYMENT chooses how the payment completes:
-//   simulated (default)  the token and order are real SANDBOX calls; the payment confirmation is
-//                        SIMULATED, in our own wording, never shaped like a Pine Labs webhook.
-//                        (Card processing is not enabled on our UAT merchant account.)
+//   simulated (default)  the token and order are real SANDBOX calls; the payment happens on our own
+//                        payment window (web/pay, "Simulated payment · Sanjeevani demo", no Pine Labs
+//                        branding), which the console shows over itself. It lists every endpoint called,
+//                        auto-confirms after PAY_AUTO_S (default 5; PAY_AUTO=0 waits for a click), and the
+//                        server confirms by itself 15 s later if no window is open. Card processing is
+//                        not enabled on our UAT merchant account, so a real payment would be declined.
+//   Endpoints: GET /pay/session → paySession() · POST /pay/confirm → onPayConfirm(body).
 //   checkout             the real flow below, for an account with card payments enabled.
 //
 // Hosted Checkout: our server creates the order; the card is entered on Pine Labs' own checkout page
@@ -34,7 +38,7 @@ const HTTP_TIMEOUT_MS = 20000;
 const REPLAY_MAX_GAP_MS = 2500;
 const WEBHOOK_TOLERANCE_S = 300;
 const FINAL = ['PROCESSED', 'FAILED', 'CANCELLED'];
-const SIMULATED_PAY_MS = 2000;
+const PAY_BACKSTOP_S = 15;
 const PAID = ['PROCESSED', 'SIMULATED'];
 const paymentMode = () => (process.env.PINELABS_PAYMENT === 'checkout' ? 'checkout' : 'simulated');
 
@@ -88,6 +92,9 @@ function base() {
   return (process.env.PINELABS_BASE || 'https://pluraluat.v2.pinepg.in').replace(/\/$/, '');
 }
 
+// Every real Pine Labs call of the current run, shown on the payment window's endpoint list.
+let trace = [];
+
 async function call(method, path, { token, body, signal } = {}) {
   const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
   if (token) {
@@ -102,8 +109,10 @@ async function call(method, path, { token, body, signal } = {}) {
   const text = await res.text();
   let json;
   try { json = text ? JSON.parse(text) : {}; } catch { json = { raw: text.slice(0, 500) }; }
+  trace.push({ method, url: base() + path, status: res.status, label: LABEL });
   return { status: res.status, ok: res.ok, json };
 }
+const ep = (method, path) => `${method} ${base()}${path}`;
 
 function fail(step, r) {
   const msg = (r.json && (r.json.message || r.json.response_message || r.json.code)) || JSON.stringify(r.json).slice(0, 200);
@@ -121,6 +130,71 @@ const paymentError = (p) => {
   return [e.code, more.reason, more.step].filter(Boolean).join(' · ') || 'no reason given';
 };
 
+/* ---------------- Simulated payment window ---------------- */
+// One payment window at a time. run() opens a session; the page reads it (GET /pay/session) and
+// confirms it (POST /pay/confirm); run() resumes when it is confirmed.
+let session = null;
+const payAutoS = () => (process.env.PAY_AUTO === '0' ? 0 : Number(process.env.PAY_AUTO_S) || 5);
+const newPaymentId = () => `SIM-PAY-${randomUUID().slice(0, 8).toUpperCase()}`;
+
+function openSession(info) {
+  let resolve;
+  const done = new Promise((r) => { resolve = r; });
+  session = {
+    id: `SIM-${randomUUID().slice(0, 8).toUpperCase()}`, status: 'pending', auto_confirm_s: payAutoS(),
+    order: info.order, endpoints: info.endpoints.map((e) => ({ ...e })), resolve, done
+  };
+  return session;
+}
+
+function confirmSession(ses, by) {
+  if (ses.status !== 'pending') return null;
+  ses.status = 'confirmed';
+  ses.payment_id = newPaymentId();
+  ses.confirmed_by = by;
+  const e = ses.endpoints.find((x) => x.method === 'POST' && x.url === '/pay/confirm');
+  if (e) e.status = 200;
+  ses.resolve({ payment_id: ses.payment_id, confirmed_by: by });
+  return ses.payment_id;
+}
+
+export function paySession() {
+  if (!session) return { active: false };
+  const { resolve, done, ...pub } = session;
+  return { active: true, ...pub };
+}
+
+export async function onPayConfirm(body) {
+  if (!session || session.status !== 'pending') return { status: 409, body: { error: 'no payment waiting' } };
+  if (!body || body.session_id !== session.id) return { status: 409, body: { error: 'unknown payment session' } };
+  const paymentId = confirmSession(session, 'page');
+  return { status: 200, body: { confirmed: true, payment_id: paymentId, simulated: true } };
+}
+
+// Opens the window, waits for its confirmation (or the safety-net timer), streams the rows.
+async function simulatedPayment(info, emit, signal) {
+  const o = info.order;
+  const ses = openSession(info);
+  emit({ label: 'SIMULATED', type: 'pay_page', title: 'payment window · simulated', body: 'Sanjeevani demo payment page · no money moves',
+    endpoint: 'GET /pay/', src: `/pay/?s=${ses.id}`, pay_part: true });
+  const backstopMs = ses.auto_confirm_s > 0 ? (ses.auto_confirm_s + PAY_BACKSTOP_S) * 1000 : 0;
+  const timer = backstopMs && setTimeout(() => confirmSession(ses, 'timer (no payment window open)'), backstopMs);
+  let conf;
+  try {
+    conf = await Promise.race([ses.done, new Promise((_, reject) => signal && signal.addEventListener('abort', () => reject(signal.reason || new Error('aborted')), { once: true }))]);
+  } catch (e) {
+    if (session === ses) session = null;
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+  emit({ label: 'SIMULATED', type: 'request', title: 'confirm test payment', endpoint: 'POST /pay/confirm', pay_part: true,
+    json: { session_id: ses.id, pinelabs_order_id: o.pinelabs_order_id, amount_inr: o.amount_inr, method: o.card } });
+  emit({ label: 'SIMULATED', type: 'response', title: `payment confirmed · ₹${o.amount_inr} · simulated`, endpoint: 'POST /pay/confirm', http: 200, pay_part: true, pay_close: true,
+    json: { simulated: true, payment_id: conf.payment_id, pinelabs_order_id: o.pinelabs_order_id, merchant_order_reference: o.merchant_order_reference, amount_inr: o.amount_inr, confirmed_by: conf.confirmed_by } });
+  return conf;
+}
+
 /* ---------------- Live run ---------------- */
 function missingEnv() {
   return ['PINELABS_CLIENT_ID', 'PINELABS_CLIENT_SECRET'].filter((k) => !process.env[k]);
@@ -133,14 +207,16 @@ async function live(ctx, emit) {
   const s = ctx.state;
   const amountInr = Number((ctx.step && ctx.step.amount_inr) || s.order.price_inr);
   const paise = Math.round(amountInr * 100);
+  trace = [];
 
   // 1. Token
   const tokenReq = { client_id: process.env.PINELABS_CLIENT_ID, client_secret: process.env.PINELABS_CLIENT_SECRET, grant_type: 'client_credentials' };
-  emit({ type: 'request', title: 'pinelabs.token · POST /api/auth/v1/token', json: { ...tokenReq, client_id: last4(tokenReq.client_id) } });
+  const tokenEp = ep('POST', '/api/auth/v1/token');
+  emit({ type: 'request', title: 'pinelabs.token', endpoint: tokenEp, json: { ...tokenReq, client_id: last4(tokenReq.client_id) } });
   const tok = await call('POST', '/api/auth/v1/token', { body: tokenReq, signal });
-  if (!tok.ok || !tok.json.access_token) { emit({ type: 'response', title: `token failed · ${tok.status}`, json: tok.json }); throw fail('token', tok); }
+  if (!tok.ok || !tok.json.access_token) { emit({ type: 'response', title: `token failed · ${tok.status}`, endpoint: tokenEp, http: tok.status, json: tok.json }); throw fail('token', tok); }
   const token = tok.json.access_token;
-  emit({ type: 'response', title: `token issued · ${tok.status}`, json: tok.json });
+  emit({ type: 'response', title: 'token issued', endpoint: tokenEp, http: tok.status, json: tok.json });
 
   // 2. Hosted Checkout order
   const ref = `${s.order.merchant_ref}-${Date.now().toString(36).toUpperCase()}`;  // unique per attempt
@@ -156,19 +232,23 @@ async function live(ctx, emit) {
     failure_callback_url: callback,
     purchase_details: { customer: { first_name: s.caregiver.name, customer_id: 'SNJ-CG-01' } }
   };
-  emit({ type: 'request', title: `pinelabs.checkout.create · ₹${amountInr}`, json: orderReq });
+  const orderEp = ep('POST', '/api/checkout/v1/orders');
+  emit({ type: 'request', title: `pinelabs.checkout.create · ₹${amountInr}`, endpoint: orderEp, json: orderReq });
   const ord = await call('POST', '/api/checkout/v1/orders', { token, body: orderReq, signal });
-  if (!ord.ok || !ord.json.order_id || !ord.json.redirect_url) { emit({ type: 'response', title: `checkout order failed · ${ord.status}`, json: ord.json }); throw fail('checkout order', ord); }
+  if (!ord.ok || !ord.json.order_id || !ord.json.redirect_url) { emit({ type: 'response', title: `checkout order failed · ${ord.status}`, endpoint: orderEp, http: ord.status, json: ord.json }); throw fail('checkout order', ord); }
   const orderId = ord.json.order_id;
-  emit({ type: 'response', title: `Order created · ₹${amountInr} · ${orderId}`, json: { ...ord.json, token: '••••', redirect_url: maskUrl(ord.json.redirect_url) } });
+  emit({ type: 'response', title: `Order created · ₹${amountInr} · ${orderId}`, endpoint: orderEp, http: ord.status, json: { ...ord.json, token: '••••', redirect_url: maskUrl(ord.json.redirect_url) } });
 
   const mandatePatch = { mandate: { used: s.mandate.used + amountInr, lastDebit: `₹${amountInr} · Apollo` } };
   if (paymentMode() === 'simulated') {
-    emit({ label: 'SIMULATED', type: 'info', title: 'payment · simulated card payment', body: 'The Pine Labs UAT order above is real; this payment step is simulated' });
-    await sleep(SIMULATED_PAY_MS, signal);
-    emit({ label: 'SIMULATED', type: 'response', title: `payment confirmed · ₹${amountInr} · simulated`,
-      json: { simulated: true, pinelabs_order_id: orderId, merchant_order_reference: ref, amount_inr: amountInr, method: 'card (test)' } });
-    return { events: [], statePatch: mandatePatch, artifacts: {}, result: { status: 'SIMULATED', order_id: orderId, confirmed_via: 'simulated' } };
+    const payInfo = {
+      order: { item: s.order.item, pharmacy: s.order.pharmacy, customer: s.caregiver.name, amount_inr: amountInr,
+        pinelabs_order_id: orderId, merchant_order_reference: ref, card: 'Test card •••• 1112' },
+      endpoints: [...trace, { method: 'GET', url: '/pay/session', status: 200, label: 'SIMULATED' }, { method: 'POST', url: '/pay/confirm', status: null, label: 'SIMULATED' }]
+    };
+    const conf = await simulatedPayment(payInfo, emit, signal);
+    return { events: [], statePatch: mandatePatch, artifacts: {}, payInfo,
+      result: { status: 'SIMULATED', order_id: orderId, payment_id: conf.payment_id, confirmed_via: conf.confirmed_by } };
   }
 
   // Listen before the page opens, so a fast webhook is not missed.
@@ -196,7 +276,7 @@ async function live(ctx, emit) {
       for (const p of d.payments || []) {
         if (p.status === 'FAILED' && !seenFailures.has(p.id)) {
           seenFailures.add(p.id);
-          emit({ type: 'response', title: `payment attempt failed · ${paymentError(p)}`, body: `Can be retried on the same page (${d.payment_retries_remaining ?? '?'} retries left)`, json: { order_id: d.order_id, status: d.status, payment: { id: p.id, status: p.status, payment_method: p.payment_method, error_detail: p.error_detail } } });
+          emit({ type: 'response', title: `payment attempt failed · ${paymentError(p)}`, endpoint: ep('GET', `/api/pay/v1/orders/${orderId}`), http: g.status, body: `Can be retried on the same page (${d.payment_retries_remaining ?? '?'} retries left)`, json: { order_id: d.order_id, status: d.status, payment: { id: p.id, status: p.status, payment_method: p.payment_method, error_detail: p.error_detail } } });
         }
       }
       if (FINAL.includes(d.status)) return { via: 'status', json: g.json, status: d.status };
@@ -216,9 +296,9 @@ async function live(ctx, emit) {
 
   if (done.via === 'webhook') {
     const sig = done.verified ? 'signature verified' : `signature NOT verified (${done.reason})`;
-    emit({ type: 'response', title: `webhook: ${done.event_type || done.status} · ${sig}`, json: { event_type: done.event_type, data: done.data } });
+    emit({ type: 'response', title: `webhook: ${done.event_type || done.status} · ${sig}`, endpoint: 'POST /webhooks/pinelabs', json: { event_type: done.event_type, data: done.data } });
   } else {
-    emit({ type: 'response', title: `order status: ${done.status} · GET /api/pay/v1/orders/{id}`, json: done.json });
+    emit({ type: 'response', title: `order status: ${done.status}`, endpoint: ep('GET', `/api/pay/v1/orders/${orderId}`), http: 200, json: done.json });
   }
 
   const ok = done.status === 'PROCESSED';
@@ -244,18 +324,30 @@ export async function run(ctx) {
   };
   const r = await live(ctx, emit);
   if (PAID.includes(r.result.status)) {
-    const file = writeCache(CACHE, { recorded_at: new Date().toISOString(), base: base(), payment: paymentMode(), events: recorded, statePatch: r.statePatch, result: r.result });
+    const file = writeCache(CACHE, { recorded_at: new Date().toISOString(), base: base(), payment: paymentMode(), events: recorded, pay_info: r.payInfo, statePatch: r.statePatch, result: r.result });
     console.log(`  · pinelabs: saved ${file}`);
   }
-  return r;
+  const { payInfo, ...out } = r;
+  return out;
 }
 
 async function replay(ctx) {
   const cached = readCache(CACHE);
   if (!cached) throw new Error('no cache/pinelabs.json yet (run `node server/integrations/pinelabs.js --live`)');
   let prev = 0;
+  let paid = false;
+  let result = cached.result;
   for (const e of cached.events) {
     const { dt_ms: dt = prev, ...evt } = e;
+    if (evt.pay_part) {
+      // The payment window is interactive, so it is opened again rather than replayed.
+      if (!paid && cached.pay_info) {
+        paid = true;
+        const conf = await simulatedPayment(cached.pay_info, (x) => ctx.emit({ source: 'pinelabs', ...x }), ctx.signal);
+        result = { ...cached.result, payment_id: conf.payment_id, confirmed_via: conf.confirmed_by };
+      }
+      continue;
+    }
     await sleep(Math.min(Math.max(dt - prev, 0), REPLAY_MAX_GAP_MS), ctx.signal);
     prev = dt;
     ctx.emit({ ...evt, recorded_at: cached.recorded_at });
@@ -266,7 +358,7 @@ async function replay(ctx) {
     events: [],
     statePatch: amountInr ? { mandate: { used: ctx.state.mandate.used + amountInr, lastDebit: `₹${amountInr} · Apollo` } } : {},
     artifacts: {},
-    result: cached.result
+    result
   };
 }
 

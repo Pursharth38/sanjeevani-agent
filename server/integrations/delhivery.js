@@ -43,17 +43,17 @@ async function live(ctx, emit) {
 
   // 1. Pincode check (India Post)
   const postUrl = `${INDIA_POST}/${pincode}`;
-  emit({ source: 'agent', label: 'LIVE', type: 'request', title: `pincode lookup · India Post · ${pincode}`, json: { method: 'GET', url: postUrl } });
+  emit({ source: 'agent', label: 'LIVE', type: 'request', title: `pincode lookup · India Post · ${pincode}`, endpoint: `GET ${postUrl}`, json: { method: 'GET', url: postUrl } });
   const post = await getJson(postUrl, { signal });
   const entry = Array.isArray(post.json) ? post.json[0] : null;
   const offices = (entry && entry.PostOffice) || [];
   if (!post.ok || !entry || entry.Status !== 'Success' || !offices.length) {
-    emit({ source: 'agent', label: 'LIVE', type: 'response', title: `pincode ${pincode} not found · ${post.status}`, json: post.json });
+    emit({ source: 'agent', label: 'LIVE', type: 'response', title: `pincode ${pincode} not found`, endpoint: `GET ${postUrl}`, http: post.status, json: post.json });
     return { events: [], statePatch: {}, artifacts: {}, result: { serviceable: false, route: null, reason: 'unknown pincode' } };
   }
   const district = offices[0].District;
   const stateName = offices[0].State;
-  emit({ source: 'agent', label: 'LIVE', type: 'response', title: `${pincode} · ${district}, ${stateName} · ${offices.length} post offices`,
+  emit({ source: 'agent', label: 'LIVE', type: 'response', title: `${pincode} · ${district}, ${stateName} · ${offices.length} post offices`, endpoint: `GET ${postUrl}`, http: post.status,
     json: { Status: entry.Status, Message: entry.Message, PostOffice: offices.slice(0, 3).map(({ Name, BranchType, District, State, Pincode }) => ({ Name, BranchType, District, State, Pincode })) } });
 
   // 2. Serviceability (Delhivery)
@@ -62,9 +62,9 @@ async function live(ctx, emit) {
   const token = process.env.DELHIVERY_TOKEN;
   if (token) {
     const url = `${base()}/c/api/pin-codes/json/?filter_codes=${encodeURIComponent(pincode)}`;
-    emit({ type: 'request', title: `delhivery.pincode ${pincode}`, json: { method: 'GET', url, headers: { Authorization: `Token ${token}` } } });
+    emit({ type: 'request', title: `delhivery.pincode ${pincode}`, endpoint: `GET ${url}`, json: { method: 'GET', url, headers: { Authorization: `Token ${token}` } } });
     const r = await getJson(url, { headers: { Authorization: `Token ${token}` }, signal });
-    emit({ type: 'response', title: `serviceability · ${r.status}`, json: r.json });
+    emit({ type: 'response', title: 'serviceability', endpoint: `GET ${url}`, http: r.status, json: r.json });
     if (!r.ok) throw new Error(`delhivery pin-codes failed: HTTP ${r.status}`);
     const codes = (r.json.delivery_codes || []).map((c) => c.postal_code || {});
     const pc = codes[0];
@@ -72,7 +72,7 @@ async function live(ctx, emit) {
     verifiedBy = 'delhivery';
     emit({ type: 'info', title: pc ? `${pincode} ${serviceable ? 'serviceable' : 'not serviceable'} for prepaid · ${pc.district || district}` : `${pincode} not in Delhivery's network` });
   } else {
-    emit({ label: 'SIMULATED', type: 'info', title: `delhivery serviceability · ${pincode} · simulated`, body: 'No Delhivery API token; the pincode above is real, this check is simulated' });
+    emit({ label: 'SIMULATED', type: 'info', title: `delhivery serviceability · ${pincode} · simulated`, endpoint: `no API call · GET ${base()}/c/api/pin-codes/json/ needs DELHIVERY_TOKEN`, body: 'The pincode above is real; this check is simulated' });
     await sleep(SIMULATED_MS, signal);
     serviceable = true;
     verifiedBy = 'simulated';

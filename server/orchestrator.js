@@ -23,6 +23,8 @@
 //   GET  /events             SSE for the agent console   (hello, phase, evt, control)
 //   GET  /cue-stream         SSE for the cue page: unnamed messages {"beat": N, "step": …}; {"beat": 0} on reset
 //   POST /cue/ack            JSON body → whatsapp.onCueAck(body) → its { status, type, body }
+//   /pay/                    simulated payment window (web/pay); the console opens it over itself
+//   GET  /pay/session        → pinelabs.paySession();  POST /pay/confirm → pinelabs.onPayConfirm(body)
 //   GET  /status             run status as JSON;  GET /state.json  internal story state (debug)
 //   POST /next  /reset  /pause
 //   ANY  /webhooks/<module>  → that module's onWebhook({ method, headers, rawBody, body, query, url })
@@ -566,8 +568,29 @@ async function handleCueAck(req, res) {
   }
 }
 
+/* ---------------- Simulated payment window ---------------- */
+async function handlePay(req, res, p) {
+  const mod = await loadModule('pinelabs');
+  if (p === '/pay/session') {
+    if (!mod || typeof mod.paySession !== 'function') return sendJson(res, 200, { active: false });
+    return sendJson(res, 200, mod.paySession());
+  }
+  if (!mod || typeof mod.onPayConfirm !== 'function') return sendJson(res, 404, { error: 'pinelabs.onPayConfirm not available' });
+  let body;
+  try {
+    const raw = await readBody(req);
+    body = raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return sendJson(res, 400, { error: `bad JSON body: ${e.message}` });
+  }
+  const r = (await mod.onPayConfirm(body)) || {};
+  log(`  ← payment window confirm (${r.status || 200})`);
+  return sendJson(res, r.status || 200, r.body || {});
+}
+
 /* ---------------- HTTP ---------------- */
 const STATIC = {
+  '/pay/': join(ROOT, 'web', 'pay'),
   '/console/': join(ROOT, 'web', 'console'),
   '/onboarding/': join(ROOT, 'web', 'onboarding'),
   '/dashboard/': join(ROOT, 'web', 'dashboard'),
@@ -623,6 +646,7 @@ const server = http.createServer((req, res) => {
   if (hook) return handleWebhook(req, res, hook[1], url);
   if (!isLaptop(req) && !remoteAllowed(req.method, p)) return sendJson(res, 403, { error: 'only the cue page is reachable from other devices' });
   if (req.method === 'POST' && p === '/cue/ack') return handleCueAck(req, res);
+  if ((req.method === 'GET' && p === '/pay/session') || (req.method === 'POST' && p === '/pay/confirm')) return handlePay(req, res, p);
 
   if (req.method === 'POST') {
     if (p === '/next') return sendJson(res, 200, { ok: start(), ...status() });
@@ -633,7 +657,7 @@ const server = http.createServer((req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return sendJson(res, 405, { error: 'method not allowed' });
 
   if (p === '/') { res.writeHead(302, { Location: '/console/' }); return res.end(); }
-  if (['/console', '/onboarding', '/dashboard', '/cue'].includes(p)) { res.writeHead(301, { Location: p + '/' }); return res.end(); }
+  if (['/console', '/onboarding', '/dashboard', '/cue', '/pay'].includes(p)) { res.writeHead(301, { Location: p + '/' }); return res.end(); }
   if (p === '/state.json') return sendJson(res, 200, store.json());
   if (p === '/status') return sendJson(res, 200, status());
   if (p === '/events') {
