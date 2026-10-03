@@ -48,6 +48,9 @@ const PORT = Number(process.env.PORT) || 4000;
 const PREROLL_ON = process.env.PREROLL !== '0';
 const HOLD_WINDOW_S = Number(process.env.HOLD_WINDOW_S) || 10;
 const EVENT_GAP_MS = 700;       // pause between events a module returns at once
+const TYPE_CPS = 40;            // console types reasoning at this speed (plan section 8)
+const LINE_MS = 700;            // console reveals transcript lines at this pace
+const TIMECARD_MS = 1600;       // console shows a full-screen time card this long
 const WEBHOOK_MAX_BYTES = 1 << 20;
 
 /* ---------------- Run state ---------------- */
@@ -94,6 +97,16 @@ function setPhase(name, title, card = null) {
   phase = name;
   broadcast('phase', { phase: name, title, timecard: card ? timecard(card) : null, mode: MODE });
   log(`▶ ${title}${card ? ` · ${timecard(card)}` : ''}`);
+}
+
+// How long the console needs to animate an event, so the run never gets ahead of the screen.
+function animMs(e) {
+  if (e.type === 'stream') {
+    const text = e.stream || (e.json && Array.isArray(e.json.reasoning) ? e.json.reasoning.join('\n\n') : '');
+    return Math.ceil((String(text).length / TYPE_CPS) * 1000) + EVENT_GAP_MS;
+  }
+  if (e.type === 'transcript') return (Array.isArray(e.lines) ? e.lines.length : 0) * LINE_MS + EVENT_GAP_MS;
+  return EVENT_GAP_MS;
 }
 
 /* ---------------- Pausing / cancelling ---------------- */
@@ -208,7 +221,7 @@ async function runModule(name, step, token) {
   log(`  · ${name}${step ? ` (${step.step})` : ''} via ${r.via}`);
   for (const e of r.events) {
     emit(withSource(name, e), token);
-    await sleep(EVENT_GAP_MS, token);
+    await sleep(animMs(e), token);
   }
   if (r.statePatch) store.apply(r.statePatch);
   return r;
@@ -346,6 +359,7 @@ async function executePlan({ decision, plan }, token) {
       currentStep = null;
       setClock(STORY.delivered);
       setPhase('delivered', 'Delivered', STORY.delivered);
+      await sleep(TIMECARD_MS, token);
       emit(DELIVERED.event, token);
       store.apply(DELIVERED.statePatch);
       facts.delivered = true;
@@ -363,11 +377,13 @@ async function runAgent(token) {
     if (PREROLL_ON) {
       setClock(STORY.preroll);
       setPhase('preroll', 'Records', STORY.preroll);
+      await sleep(TIMECARD_MS, token);
       await playScripted(PREROLL, token);
     }
 
     setClock(STORY.trigger);
     setPhase('trigger', 'Trigger', STORY.trigger);
+    await sleep(TIMECARD_MS, token);
     store.apply(TRIGGER.statePatch);
     await playScripted(TRIGGER.events, token);
 
@@ -389,6 +405,7 @@ async function runAgent(token) {
     if (outcome.ok) {
       setClock(STORY.summary);
       setPhase('summary', 'Caregiver lands', STORY.summary);
+      await sleep(TIMECARD_MS, token);
       store.apply(SUMMARY_PATCH);
       agent(`summary · ${n}, 0 missed`, token);
     } else {

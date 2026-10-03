@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Console · Sanjeevani</title>
+  <link rel="icon" type="image/png" href="/dashboard/assets/web/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><img src="/dashboard/assets/web/mark-white.png" alt="" width="28" height="28"><span>Sanjeevani agent</span></div>
+    <span class="run" id="run" data-state="idle"><i></i><b id="runText">idle</b></span>
+    <span class="phase" id="phaseTitle">Waiting to start</span>
+    <span class="grow"></span>
+    <span class="mode" id="mode">REPLAY</span>
+    <span class="clock" id="clock">—</span>
+  </header>
+
+  <div class="layout">
+    <aside class="rail">
+      <section class="panel">
+        <h2>Plan</h2>
+        <p class="hint" id="planHint">The agent's plan appears here once it has reasoned.</p>
+        <ol class="plan" id="plan"></ol>
+      </section>
+      <section class="panel">
+        <h2>Limits</h2>
+        <div class="limit">
+          <div class="limit-row"><span>Pine Labs mandate</span><b id="mandateText">—</b></div>
+          <div class="bar"><i id="mandateBar"></i></div>
+        </div>
+        <dl class="facts">
+          <dt>Pursharth</dt><dd id="factAway">—</dd>
+          <dt>Backup</dt><dd id="factBackup">—</dd>
+          <dt>Maa's Amlodipine</dt><dd id="factStock">—</dd>
+        </dl>
+      </section>
+      <section class="panel">
+        <h2>Run</h2>
+        <ol class="phases" id="phases">
+          <li data-phase="preroll">Records</li>
+          <li data-phase="trigger">Trigger</li>
+          <li data-phase="reason">Agent plan</li>
+          <li data-phase="execute">Acting</li>
+          <li data-phase="delivered">Delivered</li>
+          <li data-phase="summary">Summary</li>
+        </ol>
+      </section>
+    </aside>
+
+    <main class="feed" id="feed" aria-live="polite"></main>
+  </div>
+
+  <footer class="keys" id="keys"><kbd>Space</kbd> start <kbd>R</kbd> reset <kbd>P</kbd> pause <kbd>J</kbd> JSON <kbd>H</kbd> hide</footer>
+
+  <div class="overlay title-card" id="titleCard">
+    <img src="/dashboard/assets/web/logo-white.png" alt="Sanjeevani" class="title-logo">
+    <h1>One automatic run of the Sanjeevani agent</h1>
+    <ul class="truth" id="truth">
+      <li><b>Agent reasoning</b> real Hugging Face model output (recorded run)</li>
+      <li><b>Clinic call · voice note</b> live Gnani</li>
+      <li><b>WhatsApp</b> live, via Twilio</li>
+      <li><b>Payment</b> real Pine Labs UAT order · payment step simulated</li>
+      <li><b>Delivery</b> real Delhivery pincode check · delivery completion simulated</li>
+      <li><b>OCR</b> one real sample run · ABHA push simulated</li>
+    </ul>
+    <p class="title-foot">Every event below carries its source label</p>
+  </div>
+
+  <div class="overlay time-card" id="timeCard"><span id="timeCardText"></span></div>
+
+  <div class="overlay end-card" id="endCard">
+    <p class="end-k">Missed care actions</p>
+    <p class="end-n" id="endN">0</p>
+    <p class="end-sub" id="endSub"></p>
+  </div>
+
+  <script src="console.js"></script>
+</body>
+</html>
