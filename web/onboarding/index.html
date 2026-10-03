@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sanjeevani · Add records</title>
+<link rel="icon" type="image/png" href="../dashboard/assets/web/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../dashboard/css/app.css">
+<style>
+  /* Onboarding animation (plan section 7). Show-only: nothing uploaded here is processed. */
+  body { background: var(--g0); color: var(--g950); min-height: 100vh; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 32px 56px; }
+  .top { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; }
+  .top img { height: 40px; }
+  .top .who { margin-left: auto; color: var(--g500); font-size: 14px; }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -.01em; margin: 0 0 6px; }
+  .sub { color: var(--g500); margin: 0 0 28px; font-size: 15px; }
+  .stage-line { display: flex; align-items: center; gap: 10px; color: var(--brand); font-weight: 600; font-size: 14px; margin-bottom: 18px; min-height: 22px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); animation: blink 1s ease-in-out infinite; }
+  .stage-line.done .dot { animation: none; background: var(--good); }
+  @keyframes blink { 50% { opacity: .25; } }
+
+  /* Upload */
+  .drop { display: block; border: 2px dashed var(--g300); border-radius: 16px; padding: 56px 24px; text-align: center; background: var(--g25); transition: border-color .2s, background .2s; cursor: pointer; }
+  .drop.over { border-color: var(--brand); background: var(--p50); }
+  .drop .big { font-size: 18px; font-weight: 600; margin: 14px 0 6px; }
+  .drop .hint { color: var(--g500); font-size: 14px; }
+  .drop-ic { width: 56px; height: 56px; border-radius: 14px; background: var(--p50); color: var(--brand); display: inline-grid; place-items: center; }
+  .kinds { display: flex; gap: 8px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+
+  /* Documents */
+  .docs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .doc { display: flex; gap: 16px; padding: 16px; border: 1px solid var(--g200); border-radius: 14px; background: var(--g0); box-shadow: var(--sh-sm);
+         opacity: 0; transform: translateX(48px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
+  .doc.in { opacity: 1; transform: none; }
+  .thumb { position: relative; flex: none; width: 112px; height: 148px; border-radius: 8px; overflow: hidden; background: var(--g100); border: 1px solid var(--g150); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .file { position: absolute; inset: 0; display: grid; place-items: center; color: var(--g400); font-size: 11px; text-align: center; padding: 8px; }
+  .scan { position: absolute; left: 0; right: 0; height: 36px; top: -36px; pointer-events: none;
+          background: linear-gradient(180deg, transparent, rgba(26,93,166,.28) 70%, var(--brand) 100%); opacity: 0; }
+  .doc.scanning .scan { opacity: 1; animation: scan 1s linear infinite; }
+  @keyframes scan { to { top: 148px; } }
+  .tick { position: absolute; right: 6px; bottom: 6px; width: 22px; height: 22px; border-radius: 50%; background: var(--good); color: #fff; display: grid; place-items: center; font-size: 13px;
+          transform: scale(0); transition: transform .3s var(--ease); }
+  .doc.synced .tick { transform: scale(1); }
+  .meta { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .fname { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .type { align-self: flex-start; transform: scale(.85); opacity: 0; transition: transform .3s var(--ease), opacity .3s; }
+  .type.show { transform: none; opacity: 1; }
+  .fields { display: flex; flex-direction: column; gap: 6px; }
+  .field { display: flex; align-items: center; gap: 8px; font-size: 13px; min-height: 22px; }
+  .field .txt { flex: 1; min-width: 0; color: var(--g800); }
+  .field .txt b { font-weight: 600; }
+  .conf { font-size: 11px; font-weight: 600; padding: 3px 7px; border-radius: 9999px; opacity: 0; transition: opacity .3s, background .4s, color .4s; white-space: nowrap; }
+  .conf.show { opacity: 1; }
+  .conf.hi { background: var(--good-bg); color: var(--good-ink); }
+  .conf.lo { background: var(--warn-bg); color: var(--warn-ink); animation: pulse 1.2s ease-in-out infinite; }
+  .conf.ok { background: var(--good-bg); color: var(--good-ink); animation: none; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 4px rgba(239,177,0,.25); } }
+  .sync { font-size: 12px; color: var(--good-ink); font-weight: 600; opacity: 0; transition: opacity .4s; }
+  .doc.synced .sync { opacity: 1; }
+
+  /* Ask */
+  .ask { margin-top: 20px; display: flex; align-items: center; gap: 16px; padding: 16px 18px; border-radius: 14px; background: var(--warn-bg); border: 1px solid var(--warn-bd);
+         opacity: 0; transform: translateY(8px); transition: opacity .4s, transform .4s var(--ease); }
+  .ask.show { opacity: 1; transform: none; }
+  .ask .q { flex: 1; font-size: 15px; }
+  .ask .q small { display: block; color: var(--warn-ink); font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+
+  /* Ready */
+  .ready { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(255,255,255,.96); opacity: 0; pointer-events: none; transition: opacity .5s; }
+  .ready.show { opacity: 1; pointer-events: auto; }
+  .ready .box { text-align: center; }
+  .ready .ok { width: 64px; height: 64px; border-radius: 50%; background: var(--good); color: #fff; display: inline-grid; place-items: center; font-size: 32px; margin-bottom: 16px; }
+  .ready h2 { margin: 0 0 6px; font-size: 24px; }
+  .ready p { margin: 0; color: var(--g500); }
+  .paused { position: fixed; top: 12px; right: 12px; font-size: 12px; color: var(--g500); }
+
+  @media (prefers-reduced-motion: reduce) { .doc.scanning .scan, .dot, .conf.lo { animation: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="../dashboard/assets/logo.png" alt="Sanjeevani">
+    <span class="who">Maa · 68 · Lucknow</span>
+  </div>
+
+  <section id="upload">
+    <h1>Add Maa's records</h1>
+    <p class="sub">Prescriptions, lab reports and discharge summaries. Sanjeevani reads them and builds Maa's dashboard.</p>
+    <label class="drop" id="drop">
+      <input type="file" id="files" multiple accept="image/*,application/pdf" hidden>
+      <span class="drop-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg></span>
+      <div class="big">Drop documents here or browse</div>
+      <div class="hint">Photos or PDFs, up to 4 at a time</div>
+      <div class="kinds"><span class="tag tag--blue">Prescription</span><span class="tag tag--blue">Lab report</span><span class="tag tag--blue">Discharge summary</span></div>
+    </label>
+  </section>
+
+  <section id="reading" hidden>
+    <h1>Reading Maa's documents</h1>
+    <div class="stage-line" id="stage"><span class="dot"></span><span id="stageText">Received</span></div>
+    <div class="docs" id="docs"></div>
+    <div class="ask" id="ask">
+      <div class="q"><small>One medicine name is unclear</small>Is it <b>Amlodipine</b> or <b>Amlokind</b>?</div>
+      <button class="btn btn--primary" type="button" data-pick="Amlodipine">Amlodipine</button>
+      <button class="btn btn--secondary" type="button" data-pick="Amlokind">Amlokind</button>
+    </div>
+  </section>
+</div>
+
+<div class="ready" id="ready"><div class="box"><div class="ok">✓</div><h2>Maa's dashboard is ready</h2><p>Medicines, test trends and appointments in one place</p></div></div>
+<div class="paused" id="paused" hidden>Paused · press P</div>
+
+<script>
+// Show-only onboarding: the documents are displayed, never processed. The extracted fields are the
+// demo's illustrative data (they match the dashboard), not output from the uploaded files.
+// Query params:  ?next=../dashboard/index.html   where to go when the dashboard is "assembled"
+//                ?done=/onboarding/done           optional URL to POST to when finished (orchestrator)
+// Keys: P pauses / resumes the animation. D starts with placeholder documents (no files needed).
+const params = new URLSearchParams(location.search);
+const NEXT = params.get('next') || '../dashboard/index.html';
+const DONE_URL = params.get('done');
+const $ = (id) => document.getElementById(id);
+
+const DOC_TYPES = ['Prescription', 'Lab report', 'Lab report', 'Discharge summary'];
+const FIELDS = [
+  [
+    { text: '<b>Telmisartan 40mg</b> · once daily', conf: 96 },
+    { text: '<b>Metformin 1000mg</b> · twice daily', conf: 94 },
+    { text: '<b id="amloName">Amlodipine / Amlokind?</b> · 5mg once daily', conf: 62, unclear: true },
+  ],
+  [
+    { text: '<b>HbA1c</b> 7.4 % · 28 Sep', conf: 97 },
+    { text: '<b>Creatinine</b> 0.9 mg/dL · 12 Aug', conf: 95 },
+  ],
+  [
+    { text: '<b>HbA1c</b> 6.8 → 6.9 → 7.1 → 7.2', conf: 93 },
+    { text: '<b>BP</b> 132/84 mmHg', conf: 92 },
+  ],
+  [
+    { text: '<b>Dr. Mehta</b> · Cardiology', conf: 95 },
+    { text: '<b>Follow-up</b> in 4 weeks', conf: 91 },
+  ],
+];
+
+// ---- pausable timing --------------------------------------------------------
+let paused = false;
+// Timer-based (not requestAnimationFrame) so the timing holds even when the tab isn't focused.
+const sleep = (ms) => new Promise((resolve) => {
+  let left = ms;
+  let last = performance.now();
+  const tick = () => {
+    const now = performance.now();
+    if (!paused) left -= now - last;
+    last = now;
+    if (left <= 0) resolve(); else setTimeout(tick, Math.min(left, 30));
+  };
+  setTimeout(tick, Math.min(ms, 30));
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'p' || e.key === 'P') { paused = !paused; $('paused').hidden = !paused; }
+  if ((e.key === 'd' || e.key === 'D') && !$('upload').hidden) start([]);
+});
+
+// ---- upload -----------------------------------------------------------------
+const drop = $('drop');
+['dragenter', 'dragover'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', (e) => start([...e.dataTransfer.files]));
+$('files').addEventListener('change', (e) => start([...e.target.files]));
+
+let started = false;
+function start(files) {
+  if (started) return;
+  started = true;
+  // Placeholder cards when no files are given (D key), so the animation always has 4 documents.
+  const docs = (files.length ? files : DOC_TYPES.map((t) => ({ name: `${t}.pdf` }))).slice(0, 4);
+  $('upload').hidden = true;
+  $('reading').hidden = false;
+  run(docs);
+}
+
+function docCard(file, i) {
+  const el = document.createElement('div');
+  el.className = 'doc';
+  const isImage = file.type && file.type.startsWith('image/');
+  const thumb = isImage ? `<img src="${URL.createObjectURL(file)}" alt="">` : `<div class="file">📄<br>${escapeHtml(file.name)}</div>`;
+  el.innerHTML = `<div class="thumb">${thumb}<div class="scan"></div><div class="tick">✓</div></div>
+    <div class="meta"><div class="fname">${escapeHtml(file.name)}</div>
+    <span class="tag tag--blue type">${DOC_TYPES[i]}</span><div class="fields"></div>
+    <div class="sync">FHIR record ✓ → ABHA ✓ (simulated)</div></div>`;
+  return el;
+}
+
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const setStage = (text, done = false) => { $('stageText').textContent = text; $('stage').classList.toggle('done', done); };
+
+// Types a field's text in (keeps the <b> markup by revealing characters of the plain text).
+async function typeField(container, field) {
+  const row = document.createElement('div');
+  row.className = 'field';
+  row.innerHTML = `<span class="txt"></span><span class="conf ${field.conf >= 90 ? 'hi' : 'lo'}">${field.conf}%</span>`;
+  container.appendChild(row);
+  const txt = row.querySelector('.txt');
+  const tmp = document.createElement('div');
+  tmp.innerHTML = field.text;
+  const plain = tmp.textContent;
+  for (let n = 1; n <= plain.length; n += 2) {
+    txt.textContent = plain.slice(0, n);
+    await sleep(14);
+  }
+  txt.innerHTML = field.text;
+  row.querySelector('.conf').classList.add('show');
+  return row;
+}
+
+// ---- the animation (about 12 s, plus the wait for the confirm click) ----------
+async function run(files) {
+  const grid = $('docs');
+  const cards = files.map((f, i) => grid.appendChild(docCard(f, i)));
+
+  // a. Received
+  setStage(`Received ${files.length} document${files.length > 1 ? 's' : ''}`);
+  for (const c of cards) { await sleep(120); c.classList.add('in'); }
+  await sleep(1000);
+
+  // b. Classify
+  setStage('Identifying each document');
+  for (const c of cards) {
+    c.classList.add('scanning');
+    await sleep(3000 / cards.length - 150);
+    c.classList.remove('scanning');
+    c.querySelector('.type').classList.add('show');
+    await sleep(150);
+  }
+
+  // c. Extract
+  setStage('Extracting medicines, test results and appointments');
+  let unclearRow = null;
+  for (const [i, c] of cards.entries()) {
+    for (const f of FIELDS[i]) {
+      const row = await typeField(c.querySelector('.fields'), f);
+      if (f.unclear) unclearRow = row;
+      await sleep(120);
+    }
+  }
+
+  // d. Ask (waits for the presenter's click)
+  if (unclearRow) {
+    setStage('One field needs you');
+    $('ask').classList.add('show');
+    $('ask').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const pick = await new Promise((resolve) => {
+      document.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => resolve(b.dataset.pick), { once: true }));
+    });
+    $('ask').classList.remove('show');
+
+    // e. Confirmed
+    $('amloName').textContent = pick;
+    const conf = unclearRow.querySelector('.conf');
+    conf.classList.replace('lo', 'ok');
+    conf.textContent = 'Confirmed by you';
+  }
+  setStage('Saving records');
+  for (const c of cards) { await sleep(250); c.classList.add('synced'); }
+  await sleep(900);
+  setStage('Done', true);
+
+  // f. Assemble
+  $('ready').classList.add('show');
+  if (DONE_URL) fetch(DONE_URL, { method: 'POST' }).catch(() => {});
+  window.dispatchEvent(new CustomEvent('onboarding:assembled'));
+  await sleep(2000);
+  location.href = NEXT;
+}
+</script>
+</body>
+</html>
