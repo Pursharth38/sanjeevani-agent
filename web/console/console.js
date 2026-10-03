@@ -1,5 +1,7 @@
 /* Sanjeevani agent console. Follows the orchestrator's /events stream (hello, phase, evt, control)
-   and renders every event type in team split 2.3. Keys: Space start · R reset · P pause · J JSON · H hide keys. */
+   and renders every event type in team split 2.3. Keys: Space start · R reset · P pause · J JSON · L source labels · H hide keys.
+   Source labels (LIVE, SANDBOX, SCRIPTED…) stay on every event; they are hidden on screen by default
+   for the recording and shown with L or ?labels=1. The FIXTURE flag is always shown. */
 (function () {
   'use strict';
 
@@ -447,8 +449,10 @@
     else if (k === 'p') post('/pause');
     else if (k === 'j') toggleJson(ui.lastJson);
     else if (k === 'h') $('#keys').classList.toggle('hidden');
+    else if (k === 'l') document.body.classList.toggle('labels-hidden');
   });
   $('#endCard').addEventListener('click', () => show('#endCard', false));
+  if (!new URLSearchParams(location.search).has('labels')) document.body.classList.add('labels-hidden');
 
   connect();
 })();
