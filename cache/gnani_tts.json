@@ -1,0 +1,23 @@
+{
+  "endpoint": "https://api.vachana.ai/api/v1/tts/inference",
+  "timestamp": "2026-10-03T19:35:27.275Z",
+  "request": {
+    "text": "नमस्ते माँ। आपकी बीपी की दवाई आ गई है। शनिवार सुबह 11 बजे डॉक्टर मेहता के पास आपका अपॉइंटमेंट है। पुरुषार्थ ने यह सब इंतज़ाम कर दिया है।",
+    "voice": "Nalini",
+    "model": "timbre-v2.5",
+    "language": "hi-IN",
+    "speed": 0.95,
+    "audio_config": {
+      "container": "mp3",
+      "sample_rate": 44100,
+      "num_channels": 1,
+      "bitrate": "128k"
+    }
+  },
+  "response": {
+    "status": 200,
+    "content_type": "audio/mpeg",
+    "bytes": 154226
+  },
+  "audio": "data/audio/maa_voice_note.mp3"
+}

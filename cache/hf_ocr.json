@@ -1,0 +1,75 @@
+{
+  "model": "Qwen2.5-VL-72B-Instruct",
+  "requested_model": "Qwen/Qwen2.5-VL-72B-Instruct",
+  "endpoint": "https://router.huggingface.co/v1/chat/completions",
+  "timestamp": "2026-10-03T19:25:23.182Z",
+  "image": "data/docs/prescription.jpg",
+  "prompt": "Extract every medicine from this prescription. Return only JSON: [{name, dose, frequency, duration, confidence_0_to_1}]. If unsure of a name, give your best reading and a low confidence.",
+  "raw": "```json\n[\n    {\n        \"name\": \"RL-500\",\n        \"dose\": \"1 vial\",\n        \"frequency\": \"10 days\",\n        \"duration\": \"\",\n        \"confidence_0_to_1\": 0.9\n    },\n    {\n        \"name\": \"Elocon\",\n        \"dose\": \"40g\",\n        \"frequency\": \"1 day\",\n        \"duration\": \"\",\n        \"confidence_0_to_1\": 0.8\n    },\n    {\n        \"name\": \"Monocet\",\n        \"dose\": \"18/100\",\n        \"frequency\": \"\",\n        \"duration\": \"\",\n        \"confidence_0_to_1\": 0.7\n    },\n    {\n        \"name\": \"PCM\",\n        \"dose\": \"2 tablets\",\n        \"frequency\": \"1 day\",\n        \"duration\": \"\",\n        \"confidence_0_to_1\": 0.6\n    },\n    {\n        \"name\": \"Drotin\",\n        \"dose\": \"1 mg\",\n        \"frequency\": \"1 day\",\n        \"duration\": \"\",\n        \"confidence_0_to_1\": 0.5\n    },\n    {\n        \"name\": \"Mecosyl\",\n        \"dose\": \"100mg\",\n        \"frequency\": \"1 day\",\n        \"duration\": \"\",\n        \"confidence_0_to_1\": 0.4\n    }\n]\n```",
+  "parsed": [
+    {
+      "name": "RL-500",
+      "dose": "1 vial",
+      "frequency": "10 days",
+      "duration": "",
+      "confidence_0_to_1": 0.9
+    },
+    {
+      "name": "Elocon",
+      "dose": "40g",
+      "frequency": "1 day",
+      "duration": "",
+      "confidence_0_to_1": 0.8
+    },
+    {
+      "name": "Monocet",
+      "dose": "18/100",
+      "frequency": "",
+      "duration": "",
+      "confidence_0_to_1": 0.7
+    },
+    {
+      "name": "PCM",
+      "dose": "2 tablets",
+      "frequency": "1 day",
+      "duration": "",
+      "confidence_0_to_1": 0.6
+    },
+    {
+      "name": "Drotin",
+      "dose": "1 mg",
+      "frequency": "1 day",
+      "duration": "",
+      "confidence_0_to_1": 0.5
+    },
+    {
+      "name": "Mecosyl",
+      "dose": "100mg",
+      "frequency": "1 day",
+      "duration": "",
+      "confidence_0_to_1": 0.4
+    }
+  ],
+  "response": {
+    "id": "chatcmpl-8f645bc26abfb243",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "```json\n[\n    {\n        \"name\": \"RL-500\",\n        \"dose\": \"1 vial\",\n        \"frequency\": \"10 days\",\n        \"duration\": \"\",\n        \"confidence_0_to_1\": 0.9\n    },\n    {\n        \"name\": \"Elocon\",\n        \"dose\": \"40g\",\n        \"frequency\": \"1 day\",\n        \"duration\": \"\",\n        \"confidence_0_to_1\": 0.8\n    },\n    {\n        \"name\": \"Monocet\",\n        \"dose\": \"18/100\",\n        \"frequency\": \"\",\n        \"duration\": \"\",\n        \"confidence_0_to_1\": 0.7\n    },\n    {\n        \"name\": \"PCM\",\n        \"dose\": \"2 tablets\",\n        \"frequency\": \"1 day\",\n        \"duration\": \"\",\n        \"confidence_0_to_1\": 0.6\n    },\n    {\n        \"name\": \"Drotin\",\n        \"dose\": \"1 mg\",\n        \"frequency\": \"1 day\",\n        \"duration\": \"\",\n        \"confidence_0_to_1\": 0.5\n    },\n    {\n        \"name\": \"Mecosyl\",\n        \"dose\": \"100mg\",\n        \"frequency\": \"1 day\",\n        \"duration\": \"\",\n        \"confidence_0_to_1\": 0.4\n    }\n]\n```",
+          "tool_calls": []
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "created": 1791055513,
+    "model": "Qwen2.5-VL-72B-Instruct",
+    "object": "chat.completion",
+    "usage": {
+      "prompt_tokens": 1888,
+      "completion_tokens": 308,
+      "total_tokens": 2196
+    }
+  }
+}

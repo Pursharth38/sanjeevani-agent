@@ -1,0 +1,19 @@
+{
+  "fixture": true,
+  "note": "FAKE placeholder for K's console. Replaced by cache/gnani_tts.json once P2 generates the real Gnani hi-IN audio.",
+  "events": [
+    {
+      "id": "evt_1101",
+      "beat": 11,
+      "t": "2026-10-08T15:40:12+05:30",
+      "source": "gnani",
+      "label": "LIVE",
+      "type": "audio",
+      "title": "[FIXTURE] gnani.tts · hi-IN · voice note for Maa",
+      "body": "Namaste Maa. Aapki BP ki dawaai aa gayi hai. Shanivaar subah gyarah baje Dr. Mehta ke paas aapka appointment hai. Pursharth ne yeh sab intezaam kar diya hai.",
+      "src": "data/audio/maa_voice_note.mp3"
+    }
+  ],
+  "statePatch": {},
+  "artifacts": { "audio": "data/audio/maa_voice_note.mp3" }
+}

@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sanjeevani cue</title>
+<style>
+  :root {
+    --bg: #F5F7FA; --card: #FFFFFF; --text: #0E121B; --muted: #717784; --border: #E1E4EA;
+    --blue: #2B7FFF; --blue-50: #EFF6FF; --green: #16A34A; --green-50: #F0FDF4; --amber: #B45309; --amber-50: #FFF7ED; --red: #FB2C36;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--border); }
+  .beat-no { font-weight: 700; font-size: 28px; color: var(--blue); min-width: 2ch; }
+  .beat-title { font-weight: 600; font-size: 18px; flex: 1; }
+  .status { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .status.live::before { content: "● "; color: var(--green); }
+  .status.off::before { content: "● "; color: var(--red); }
+  main { max-width: 720px; margin: 0 auto; padding: 16px; display: grid; gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .card.done { opacity: .5; }
+  .card.later { opacity: .35; }
+  .who { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .send .who { color: var(--blue); }
+  .wait { background: var(--amber-50); border-color: #FED7AA; }
+  .wait .who { color: var(--amber); }
+  .msg { font-size: 22px; line-height: 1.35; white-space: pre-wrap; word-break: break-word; }
+  .wait .msg { font-size: 18px; }
+  .attach { margin-top: 10px; font-size: 14px; color: var(--muted); }
+  .attach code { background: var(--blue-50); color: var(--text); padding: 1px 6px; border-radius: 6px; }
+  .tick { color: var(--green); font-weight: 600; margin-top: 8px; }
+  button { font: inherit; border-radius: 10px; border: 1px solid var(--border); background: var(--card); padding: 10px 16px; cursor: pointer; }
+  .big { margin-top: 12px; width: 100%; font-weight: 600; font-size: 18px; padding: 14px; }
+  .copy { background: var(--card); border-color: var(--blue); color: var(--blue); }
+  .copy.copied { border-color: var(--green); color: var(--green); }
+  .ack { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .hold-btn { background: var(--card); border-color: var(--red); color: var(--red); }
+  .err { color: var(--red); font-size: 14px; margin-top: 8px; }
+  .countdown { font-size: 48px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
+  .note { color: var(--muted); text-align: center; }
+  .ok { background: var(--green-50); border-color: #BBF7D0; color: var(--green); font-weight: 600; text-align: center; }
+  .mock { display: flex; gap: 8px; justify-content: center; }
+</style>
+</head>
+<body>
+<header>
+  <span class="beat-no" id="beatNo">–</span>
+  <span class="beat-title" id="beatTitle">Waiting for the flow…</span>
+  <span class="status" id="status">connecting</span>
+</header>
+<main id="main"></main>
+
+<script>
+// The teammate's prompter. Never on camera.
+// Query params:
+//   ?stream=/cue-stream                 flow's SSE (each message: {"beat": N})
+//   ?ack=/cue/ack                       where Sent ✓ / Received ✓ taps are POSTed: {beat, step, kind}
+//   ?script=/data/whatsapp_script.json
+//   ?mock=1                             step beats by hand (← / → or buttons); taps are not sent anywhere
+const params = new URLSearchParams(location.search);
+const STREAM_URL = params.get('stream') || '/cue-stream';
+const ACK_URL = params.get('ack') || '/cue/ack';
+const SCRIPT_URL = params.get('script') || '/data/whatsapp_script.json';
+const MOCK = params.has('mock');
+const HOLD_SECONDS = 10;
+const TZ = 'Asia/Kolkata';
+
+const $ = (id) => document.getElementById(id);
+let script = null;
+let beat = null;
+let acked = 0;          // steps of the current beat the teammate has tapped
+let hold = null;        // { left, timer, result: null | 'hold' | 'none' }
+let error = '';
+
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// Weekday labels are computed from the dates in the script, never hardcoded.
+function fill(text) {
+  const fmt = (iso, opts) => new Intl.DateTimeFormat('en-IN', { timeZone: TZ, ...opts }).format(new Date(iso));
+  const { appt, return: ret } = script.vars;
+  const v = {
+    appt_weekday: fmt(appt, { weekday: 'long' }),
+    appt_wd: fmt(appt, { weekday: 'short' }),
+    appt_time: fmt(appt, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }),
+    return_weekday: fmt(ret, { weekday: 'long' }),
+  };
+  return text.replace(/\{\{(\w+)\}\}/g, (m, k) => (k in v ? v[k] : m));
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // Clipboard API needs https or localhost; on a phone over LAN fall back to execCommand.
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+  }
+}
+
+async function postAck(step, kind) {
+  if (MOCK) return true;
+  try {
+    const res = await fetch(ACK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ beat, step, kind }),
+    });
+    if (!res.ok) throw new Error(res.status);
+    error = '';
+    return true;
+  } catch {
+    error = 'Could not reach the laptop. Check Wi-Fi and tap again.';
+    render();
+    return false;
+  }
+}
+
+async function tap(step, kind) {
+  if (!(await postAck(step, kind))) return;
+  acked = step + 1;
+  const b = script.beats[String(beat)];
+  if (b.hold && acked === b.steps.length) startHold();
+  render();
+}
+
+function startHold() {
+  hold = { left: HOLD_SECONDS, result: null };
+  hold.timer = setInterval(() => {
+    hold.left -= 1;
+    if (hold.left <= 0) {
+      clearInterval(hold.timer);
+      hold.result = 'none';
+    }
+    render();
+  }, 1000);
+}
+
+async function tapHold() {
+  if (!(await postAck('hold', 'hold'))) return;
+  clearInterval(hold.timer);
+  hold.result = 'hold';
+  render();
+}
+
+function stepCard(step, i, b) {
+  const state = i < acked ? 'done' : i === acked ? 'now' : 'later';
+  const card = document.createElement('div');
+
+  if (step.from === 'caregiver') {
+    const what = step.action ? `Waiting for Pursharth to ${esc(step.action)}` : `Waiting for Pursharth: “${esc(fill(step.text))}”`;
+    card.className = `card wait ${state}`;
+    card.innerHTML = `<div class="who">Pursharth's phone</div><div class="msg">${what}</div>` +
+      (state === 'done' ? `<div class="tick">Received ✓</div>` : '') +
+      (state === 'now' ? `<button class="big ack" type="button">Received ✓</button>` : '');
+    if (state === 'now') card.querySelector('.ack').onclick = () => tap(i, 'received');
+    return card;
+  }
+
+  const text = fill(step.text);
+  card.className = `card send ${state}`;
+  card.innerHTML = `<div class="who">Send as Sanjeevani</div><div class="msg">${esc(text)}</div>` +
+    (step.attach ? `<div class="attach">📎 Attach ${step.attach.map((a) => `<code>${esc(a)}</code>`).join(' ')}</div>` : '') +
+    (state === 'done' ? `<div class="tick">Sent ✓</div>` : '') +
+    (state === 'now' ? `<button class="big copy" type="button">Copy message</button><button class="big ack" type="button">Sent ✓</button>` : '');
+  if (state === 'now') {
+    const copy = card.querySelector('.copy');
+    copy.onclick = async () => {
+      await copyText(text);
+      copy.textContent = 'Copied';
+      copy.classList.add('copied');
+    };
+    card.querySelector('.ack').onclick = () => tap(i, 'sent');
+  }
+  return card;
+}
+
+function render() {
+  const b = script.beats[String(beat)];
+  $('beatNo').textContent = beat;
+  $('beatTitle').textContent = b ? b.title : 'Unknown beat';
+  const main = $('main');
+  main.innerHTML = '';
+
+  if (!b || b.steps.length === 0) {
+    main.insertAdjacentHTML('beforeend', `<div class="card note">Nothing to send. The agent is working.</div>`);
+  } else {
+    b.steps.forEach((step, i) => main.appendChild(stepCard(step, i, b)));
+    if (error) main.insertAdjacentHTML('beforeend', `<div class="err">${esc(error)}</div>`);
+
+    if (b.hold && hold) {
+      if (hold.result === null) {
+        main.insertAdjacentHTML('beforeend', `<div class="card"><div class="who">HOLD window · compressed for demo</div>
+          <div class="countdown">0:${String(hold.left).padStart(2, '0')}</div>
+          <div class="note">Only if Pursharth replies HOLD:</div>
+          <button class="big hold-btn" type="button" id="holdBtn">Pursharth replied HOLD</button></div>`);
+        $('holdBtn').onclick = tapHold;
+      } else {
+        main.insertAdjacentHTML('beforeend', hold.result === 'hold'
+          ? `<div class="card wait"><div class="msg">HOLD received. The agent stops.</div></div>`
+          : `<div class="card ok">No HOLD. The agent carries on.</div>`);
+      }
+    } else if (acked >= b.steps.length) {
+      main.insertAdjacentHTML('beforeend', `<div class="card ok">Done ✓ Wait for the next step.</div>`);
+    }
+    if (b.hint && !hold) main.insertAdjacentHTML('beforeend', `<div class="card note">${esc(b.hint)}</div>`);
+  }
+
+  if (MOCK) {
+    main.insertAdjacentHTML('beforeend', `<div class="mock"><button id="prev" type="button">← Prev</button><button id="next" type="button">Next →</button></div>`);
+    $('prev').onclick = () => setBeat(beat - 1);
+    $('next').onclick = () => setBeat(beat + 1);
+  }
+}
+
+function setBeat(n) {
+  const max = Math.max(...Object.keys(script.beats).map(Number));
+  const next = Math.min(Math.max(0, n), max);
+  if (next === beat) return;
+  beat = next;
+  acked = 0;
+  error = '';
+  if (hold) clearInterval(hold.timer);
+  hold = null;
+  render();
+}
+
+function setStatus(text, cls) {
+  $('status').textContent = text;
+  $('status').className = 'status ' + cls;
+}
+
+function connect() {
+  const es = new EventSource(STREAM_URL);
+  es.onopen = () => setStatus('live', 'live');
+  es.onerror = () => setStatus('reconnecting', 'off');
+  es.onmessage = (e) => {
+    let msg;
+    try { msg = JSON.parse(e.data); } catch { return; }
+    if (typeof msg.beat === 'number') setBeat(msg.beat);
+  };
+}
+
+(async () => {
+  try {
+    script = await (await fetch(SCRIPT_URL, { cache: 'no-store' })).json();
+  } catch {
+    $('beatTitle').textContent = 'Could not load ' + SCRIPT_URL;
+    return;
+  }
+  if (MOCK) {
+    setStatus('mock', 'live');
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') setBeat(beat + 1);
+      if (e.key === 'ArrowLeft') setBeat(beat - 1);
+    });
+    setBeat(0);
+  } else {
+    connect();
+  }
+})();
+</script>
+</body>
+</html>

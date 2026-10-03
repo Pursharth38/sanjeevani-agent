@@ -1,0 +1,98 @@
+{
+  "model": "qwen3-235b-a22b-instruct-2507",
+  "requested_model": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+  "endpoint": "https://router.huggingface.co/v1/chat/completions",
+  "timestamp": "2026-10-03T21:36:22.831Z",
+  "case": "main",
+  "attempt": 1,
+  "rejected_attempts": [],
+  "request": {
+    "model": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+    "temperature": 0.2,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are Sanjeevani, a family health agent acting for a caregiver.\n\nRules you must follow:\n- Routine care is: a refill of an EXISTING prescription at the USUAL pharmacy within the monthly mandate cap,\n  and booking a follow-up that is due with the patient's EXISTING doctor.\n  → you may act, but inform the caregiver FIRST: notify_caregiver comes before any other action, and the\n    caregiver gets a 10-minute window to reply HOLD before anything runs.\n- Anything new (new medicine, new pharmacy, new doctor, over cap) → do NOT act; escalate to the caregiver,\n  or to the backup if the caregiver is away.\n- Away mode: an away caregiver is travelling but still reads WhatsApp. Routine care continues as normal\n  (notify_caregiver first, then act); only new things go to the backup.\n- Never diagnose or interpret test results. You may suggest the caregiver \"mention a trend to the doctor\".\n- The elderly parent is told ONLY about completed outcomes: notify_parent is the last step, runs after\n  delivery, and describes only what has already happened. Never send them pending actions.\n- Use only these tools, with these arguments:\n  notify_caregiver { message, hold_window_min }\n  escalate_to_backup { message }\n  book_appointment { via: \"gnani_call\", doctor, pref }\n  create_order { via: \"pinelabs\", pharmacy, medicine, amount_inr }\n  route_delivery { via: \"delhivery\", pincode }\n  notify_parent { via: \"gnani_tts\", lang, message }\n\nReturn ONLY JSON, with the plan steps listed in the order you will run them:\n{\n  \"reasoning\": [\"short sentence\", \"...\"],\n  \"decision\": \"act_and_inform\" | \"escalate\",\n  \"plan\": [{ \"step\": \"<tool>\", ...args }]\n}"
+      },
+      {
+        "role": "user",
+        "content": "Patient: Maa, 68, Lucknow (226001). Caregiver: Pursharth, AWAY until Sun 11 Oct. Backup: Rohan.\nMedicine: Amlodipine 5mg OD — existing prescription, 3 days of stock left. Usual pharmacy: Apollo Lucknow.\nPrice ₹184. Mandate: medicines & tests, cap ₹3,000/month, ₹1,000 used.\nFollow-up with Dr. Mehta (Cardiology) is due; not booked.\nTrend: HbA1c 6.8, 6.9, 7.1, 7.2, 7.4 (last 5 readings).\nDecide what to do now."
+      }
+    ]
+  },
+  "raw": "{\n  \"reasoning\": [\n    \"Amlodipine refill is routine care: existing prescription, usual pharmacy, and within monthly mandate cap.\",\n    \"Follow-up with Dr. Mehta is due and must be booked as part of routine care.\",\n    \"Caregiver is away but routine actions are allowed after notifying with a 10-minute hold window.\",\n    \"HbA1c trend shows a gradual rise; do not interpret, but caregiver should mention to doctor.\",\n    \"Refill and appointment are routine; no escalation needed.\"\n  ],\n  \"decision\": \"act_and_inform\",\n  \"plan\": [\n    {\n      \"step\": \"notify_caregiver\",\n      \"message\": \"Planning routine refill of Amlodipine 5mg (₹184) from Apollo Lucknow and booking follow-up with Dr. Mehta. Also noting HbA1c trend (6.8 → 7.4) — consider discussing with doctor. Will proceed in 10 minutes unless you HOLD.\",\n      \"hold_window_min\": 10\n    },\n    {\n      \"step\": \"create_order\",\n      \"via\": \"pinelabs\",\n      \"pharmacy\": \"Apollo Lucknow\",\n      \"medicine\": \"Amlodipine 5mg\",\n      \"amount_inr\": 184\n    },\n    {\n      \"step\": \"book_appointment\",\n      \"via\": \"gnani_call\",\n      \"doctor\": \"Dr. Mehta\",\n      \"pref\": \"soonest\"\n    },\n    {\n      \"step\": \"route_delivery\",\n      \"via\": \"delhivery\",\n      \"pincode\": \"226001\"\n    },\n    {\n      \"step\": \"notify_parent\",\n      \"via\": \"gnani_tts\",\n      \"lang\": \"hi\",\n      \"message\": \"माँ, आपकी दवा की डिलीवरी की गई है और डॉ. मेहता के साथ अगली जांच की तारीख तय हो गई है। सब ठीक है।\"\n    }\n  ]\n}",
+  "parsed": {
+    "reasoning": [
+      "Amlodipine refill is routine care: existing prescription, usual pharmacy, and within monthly mandate cap.",
+      "Follow-up with Dr. Mehta is due and must be booked as part of routine care.",
+      "Caregiver is away but routine actions are allowed after notifying with a 10-minute hold window.",
+      "HbA1c trend shows a gradual rise; do not interpret, but caregiver should mention to doctor.",
+      "Refill and appointment are routine; no escalation needed."
+    ],
+    "decision": "act_and_inform",
+    "plan": [
+      {
+        "step": "notify_caregiver",
+        "message": "Planning routine refill of Amlodipine 5mg (₹184) from Apollo Lucknow and booking follow-up with Dr. Mehta. Also noting HbA1c trend (6.8 → 7.4) — consider discussing with doctor. Will proceed in 10 minutes unless you HOLD.",
+        "hold_window_min": 10
+      },
+      {
+        "step": "create_order",
+        "via": "pinelabs",
+        "pharmacy": "Apollo Lucknow",
+        "medicine": "Amlodipine 5mg",
+        "amount_inr": 184
+      },
+      {
+        "step": "book_appointment",
+        "via": "gnani_call",
+        "doctor": "Dr. Mehta",
+        "pref": "soonest"
+      },
+      {
+        "step": "route_delivery",
+        "via": "delhivery",
+        "pincode": "226001"
+      },
+      {
+        "step": "notify_parent",
+        "via": "gnani_tts",
+        "lang": "hi",
+        "message": "माँ, आपकी दवा की डिलीवरी की गई है और डॉ. मेहता के साथ अगली जांच की तारीख तय हो गई है। सब ठीक है।"
+      }
+    ]
+  },
+  "response": {
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\n  \"reasoning\": [\n    \"Amlodipine refill is routine care: existing prescription, usual pharmacy, and within monthly mandate cap.\",\n    \"Follow-up with Dr. Mehta is due and must be booked as part of routine care.\",\n    \"Caregiver is away but routine actions are allowed after notifying with a 10-minute hold window.\",\n    \"HbA1c trend shows a gradual rise; do not interpret, but caregiver should mention to doctor.\",\n    \"Refill and appointment are routine; no escalation needed.\"\n  ],\n  \"decision\": \"act_and_inform\",\n  \"plan\": [\n    {\n      \"step\": \"notify_caregiver\",\n      \"message\": \"Planning routine refill of Amlodipine 5mg (₹184) from Apollo Lucknow and booking follow-up with Dr. Mehta. Also noting HbA1c trend (6.8 → 7.4) — consider discussing with doctor. Will proceed in 10 minutes unless you HOLD.\",\n      \"hold_window_min\": 10\n    },\n    {\n      \"step\": \"create_order\",\n      \"via\": \"pinelabs\",\n      \"pharmacy\": \"Apollo Lucknow\",\n      \"medicine\": \"Amlodipine 5mg\",\n      \"amount_inr\": 184\n    },\n    {\n      \"step\": \"book_appointment\",\n      \"via\": \"gnani_call\",\n      \"doctor\": \"Dr. Mehta\",\n      \"pref\": \"soonest\"\n    },\n    {\n      \"step\": \"route_delivery\",\n      \"via\": \"delhivery\",\n      \"pincode\": \"226001\"\n    },\n    {\n      \"step\": \"notify_parent\",\n      \"via\": \"gnani_tts\",\n      \"lang\": \"hi\",\n      \"message\": \"माँ, आपकी दवा की डिलीवरी की गई है और डॉ. मेहता के साथ अगली जांच की तारीख तय हो गई है। सब ठीक है।\"\n    }\n  ]\n}",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "stop",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "created": 1791063377,
+    "id": "chatcmpl-c462bd95-b756-498d-af58-a892d85844b4",
+    "model": "qwen3-235b-a22b-instruct-2507",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": {
+      "prompt_tokens": 572,
+      "total_tokens": 1056,
+      "completion_tokens": 484,
+      "prompt_tokens_details": null
+    }
+  }
+}
