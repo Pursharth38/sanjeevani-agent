@@ -1,0 +1,73 @@
+{
+  "imported_from": "Gnani dashboard · Conversation logs (transcript copied as shown)",
+  "timestamp": "2026-10-03T21:11:28.622Z",
+  "trigger": {
+    "via": "triggered from the Gnani dashboard"
+  },
+  "conversationId": null,
+  "raw_transcript": "Hello, namaste! I'm calling on behalf of the Sharma family to book a follow-up appointment with Dr. Mehta.\nYou\n1:40:35.809AM\nhello doctor mehta's clinic sure which patient\nsanjeevani\n1:40:42.217AM\nIt is for misses Sunita Sharma, she is 68 years old and is an existing patient of Dr. Mehta.\nYou\n1:40:49.043AM\nok miss sunita sharma when would she like to come\nsanjeevani\n1:40:53.837AM\nWe are looking for the earliest available Saturday morning slot, please.\nYou\n1:41:00.077AM\nsaturday the tenth at eleven am is available\nsanjeevani\n1:41:05.937AM\nJust to confirm, that is Saturday, October 10th at 11:00 AM. Is that correct?\nYou\n1:41:08.980AM\nyeah that's confirmed\nsanjeevani\n1:41:16.557AM\nCould you please add a note to the appointment that the family would like to discuss her recent HbA1c readings with Dr. Mehta?\nYou\n1:41:20.166AM\nso i've added the note\nsanjeevani\n1:41:20.517AM\nThank you so much for your help. We'll see doctor Mehta then. Have a good day!\n",
+  "stats": {
+    "callStatus": "ANSWERED",
+    "callDuration": null,
+    "startTime": 1791058235.809,
+    "endTime": 1791058280.517,
+    "utteranceAnalytics": [
+      {
+        "role": "assistant",
+        "content": "Hello, namaste! I'm calling on behalf of the Sharma family to book a follow-up appointment with Dr. Mehta.",
+        "timestamp": null
+      },
+      {
+        "role": "user",
+        "content": "hello doctor mehta's clinic sure which patient",
+        "timestamp": 1791058235.809
+      },
+      {
+        "role": "assistant",
+        "content": "It is for misses Sunita Sharma, she is 68 years old and is an existing patient of Dr. Mehta.",
+        "timestamp": 1791058242.217
+      },
+      {
+        "role": "user",
+        "content": "ok miss sunita sharma when would she like to come",
+        "timestamp": 1791058249.043
+      },
+      {
+        "role": "assistant",
+        "content": "We are looking for the earliest available Saturday morning slot, please.",
+        "timestamp": 1791058253.837
+      },
+      {
+        "role": "user",
+        "content": "saturday the tenth at eleven am is available",
+        "timestamp": 1791058260.077
+      },
+      {
+        "role": "assistant",
+        "content": "Just to confirm, that is Saturday, October 10th at 11:00 AM. Is that correct?",
+        "timestamp": 1791058265.937
+      },
+      {
+        "role": "user",
+        "content": "yeah that's confirmed",
+        "timestamp": 1791058268.98
+      },
+      {
+        "role": "assistant",
+        "content": "Could you please add a note to the appointment that the family would like to discuss her recent HbA1c readings with Dr. Mehta?",
+        "timestamp": 1791058276.557
+      },
+      {
+        "role": "user",
+        "content": "so i've added the note",
+        "timestamp": 1791058280.166
+      },
+      {
+        "role": "assistant",
+        "content": "Thank you so much for your help. We'll see doctor Mehta then. Have a good day!",
+        "timestamp": 1791058280.517
+      }
+    ]
+  },
+  "audio": null
+}

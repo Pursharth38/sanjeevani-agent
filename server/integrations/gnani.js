@@ -3,6 +3,9 @@
 // CLI:
 //   node server/integrations/gnani.js --tts    real Gnani TTS (hi-IN) → data/audio/maa_voice_note.mp3
 //                                             + cache/gnani_tts.json
+//   node server/integrations/gnani.js --import <transcript.txt> [--date YYYY-MM-DD] [--audio <file>]
+//                                             a call placed from the Gnani dashboard: saves the transcript
+//                                             copied from Conversation logs (verbatim) → cache/gnani_call.json
 //   node server/integrations/gnani.js --call   real outbound call from the Inya agent to CLINIC_PHONE (a
 //                                             whitelisted number); waits for it to end, then saves the
 //                                             transcript → cache/gnani_call.json, recording → data/audio/clinic_call.mp3
@@ -133,7 +136,7 @@ async function placeCall(emit = () => {}) {
   const startedAt = Date.now();
   const trigger = await inyaJson('POST', `/agents/${botId}/trigger_call?environment=${INYA_ENV}`, triggerRequest);
   const shownRequest = { ...triggerRequest, phone: maskPhone(phone) };
-  emit(callTriggerEvent(shownRequest, trigger));
+  emit(callTriggerEvent({ request: shownRequest, response: trigger }));
   console.log(`call triggered (${trigger.requestId}); waiting for it to end…`);
 
   // Find this call in the logs once it has an end time.
@@ -189,7 +192,8 @@ async function placeCall(emit = () => {}) {
   return record;
 }
 
-function callTriggerEvent(request, response) {
+// trigger is { request, response } for an API call, or { via } for a call placed from the dashboard.
+function callTriggerEvent(trigger) {
   return {
     id: 'evt_08g1',
     beat: 8,
@@ -198,8 +202,10 @@ function callTriggerEvent(request, response) {
     label: 'LIVE',
     type: 'request',
     title: `gnani.call → ${CALL_NAME}`,
-    body: 'Outbound call · Inya voice agent',
-    json: { request: { url: `${INYA}/agents/{botId}/trigger_call`, ...request }, response },
+    body: trigger.via ? `Outbound call · Inya voice agent · recorded (${trigger.via})` : 'Outbound call · Inya voice agent',
+    json: trigger.via
+      ? { via: trigger.via }
+      : { request: { url: `${INYA}/agents/{botId}/trigger_call`, ...trigger.request }, response: trigger.response },
   };
 }
 
@@ -208,7 +214,7 @@ function callEvents(record) {
   const s = record.stats;
   const turns = s.utteranceAnalytics ?? [];
   const offset = (ts) => STORY_CALL_START + (ts - s.startTime) * 1000;
-  const events = [callTriggerEvent(record.trigger.request, record.trigger.response)];
+  const events = [callTriggerEvent(record.trigger)];
 
   if (s.callStatus !== 'ANSWERED') {
     events.push({ id: 'evt_08g2', beat: 8, t: storyTime(STORY_CALL_START), source: 'gnani', label: 'LIVE', type: 'info', title: `Call not answered (${s.callStatus})` });
@@ -222,7 +228,7 @@ function callEvents(record) {
     source: 'gnani',
     label: 'LIVE',
     type: 'transcript',
-    title: `Call transcript · ${s.callDuration}s`,
+    title: s.callDuration ? `Call transcript · ${s.callDuration}s` : 'Call transcript',
     lines: turns.map((u) => ({ speaker: u.role === 'assistant' ? 'Agent' : 'Clinic', text: u.content })),
     json: { conversationId: record.conversationId, callStatus: s.callStatus, disposition: s.overallCallDisposition },
   });
@@ -242,6 +248,61 @@ function callEvents(record) {
     body: 'Dr. Mehta · Cardiology',
   });
   return { events, statePatch: {}, artifacts: record.audio ? { audio: record.audio } : {} };
+}
+
+// A call placed from the dashboard (Test → Trigger Agent Call): import the transcript copied from
+// Conversation logs. The pasted text is kept verbatim in the cache; turns are parsed from it unedited.
+// Format: "<speaker>\n<h:mm:ss.mmmAM>\n<text>", where the speaker is "You" (the clinic) or the agent's
+// name. Text before the first speaker line is the agent's greeting.
+function importCall(file, date, audioFile) {
+  const raw = fs.readFileSync(file, 'utf8');
+  const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const TIME = /^(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d+))?\s*([AP]M)$/i;
+  const toEpoch = (m) => {
+    const h = (Number(m[1]) % 12) + (m[5].toUpperCase() === 'PM' ? 12 : 0);
+    const hms = `${String(h).padStart(2, '0')}:${m[2]}:${m[3]}.${(m[4] ?? '0').padEnd(3, '0').slice(0, 3)}`;
+    return Date.parse(`${date}T${hms}+05:30`) / 1000;
+  };
+
+  const turns = [];
+  let current = { role: 'assistant', content: '', timestamp: null };
+  for (let i = 0; i < lines.length; i++) {
+    const speaker = lines[i].toLowerCase();
+    const isLabel = (speaker === 'you' || speaker === 'sanjeevani') && TIME.test(lines[i + 1] ?? '');
+    if (isLabel) {
+      if (current.content) turns.push(current);
+      current = { role: speaker === 'you' ? 'user' : 'assistant', content: '', timestamp: toEpoch(lines[i + 1].match(TIME)) };
+      i++;
+      continue;
+    }
+    current.content = current.content ? `${current.content} ${lines[i]}` : lines[i];
+  }
+  if (current.content) turns.push(current);
+
+  const times = turns.map((t) => t.timestamp).filter(Boolean);
+  let audio = null;
+  if (audioFile) {
+    fs.copyFileSync(audioFile, path.join(ROOT, CALL_AUDIO));
+    audio = CALL_AUDIO;
+  }
+  const record = {
+    imported_from: 'Gnani dashboard · Conversation logs (transcript copied as shown)',
+    timestamp: new Date().toISOString(),
+    trigger: { via: 'triggered from the Gnani dashboard' },
+    conversationId: null,
+    raw_transcript: raw,
+    stats: {
+      callStatus: 'ANSWERED',
+      callDuration: null,
+      startTime: Math.min(...times),
+      endTime: Math.max(...times),
+      utteranceAnalytics: turns,
+    },
+    audio,
+  };
+  fs.writeFileSync(path.join(ROOT, 'cache/gnani_call.json'), JSON.stringify(record, null, 2) + '\n');
+  console.log(`saved → cache/gnani_call.json (${turns.length} turns)${audio ? ` + ${audio}` : ' (no recording)'}`);
+  return record;
 }
 
 // ---- run ---------------------------------------------------------------------
@@ -271,6 +332,20 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     }
     console.log(`text: ${voiceNoteText()}`);
     synthesize().catch((err) => { console.error(err.message); process.exit(1); });
+  } else if (args.includes('--import')) {
+    // node server/integrations/gnani.js --import <transcript.txt> [--date YYYY-MM-DD] [--audio <recording.mp3>]
+    const at = (flag) => { const i = args.indexOf(flag); return i >= 0 ? args[i + 1] : undefined; };
+    const file = at('--import');
+    const date = at('--date') ?? new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+    if (!file) {
+      console.error('Usage: node server/integrations/gnani.js --import <transcript.txt> [--date YYYY-MM-DD] [--audio <file.mp3>]');
+      process.exit(1);
+    }
+    const record = importCall(file, date, at('--audio'));
+    for (const e of callEvents(record).events) {
+      console.log(`${e.label} · ${e.type} · ${e.title}`);
+      for (const l of e.lines ?? []) console.log(`    ${l.speaker}: ${l.text}`);
+    }
   } else if (args.includes('--agents')) {
     if (!process.env.INYA_API_KEY) {
       console.error('INYA_API_KEY is not set (add it to .env)');
@@ -298,7 +373,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       })
       .catch((err) => { console.error(err.message); process.exit(1); });
   } else {
-    console.log('Usage: node server/integrations/gnani.js --tts | --agents | --call');
+    console.log('Usage: node server/integrations/gnani.js --tts | --import <transcript.txt> | --agents | --call');
     process.exit(1);
   }
 }
