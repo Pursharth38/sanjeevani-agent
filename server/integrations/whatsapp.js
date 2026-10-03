@@ -172,8 +172,9 @@ async function runLive(key, entry, ctx) {
 
   // The plan's 10-minute HOLD window, compressed to 10 seconds for the demo (minutes → seconds).
   if (entry.hold) {
-    const seconds = ctx.step?.hold_window_min ?? 10;
-    ev({ type: 'countdown', title: `HOLD window · ${seconds}:00`, body: 'HOLD window · compressed for demo', json: { seconds, compressed: true } });
+    const minutes = ctx.step?.hold_window_min ?? 10;
+    const seconds = ctx.step?.hold_window_s ?? minutes;
+    ev({ type: 'countdown', title: `HOLD window · ${minutes}:00`, body: 'HOLD window · compressed for demo', seconds, json: { seconds, minutes, compressed: true } });
     const reply = await waitFor((m) => fromCaregiver(m) && /^\s*hold\b/i.test(m.text), seconds * 1000);
     halt = Boolean(reply);
     ev(halt
@@ -252,15 +253,16 @@ async function runManual(key, entry, ctx, wait) {
   // The plan's 10-minute HOLD window, compressed to 10 seconds for the demo (minutes → seconds).
   // The cue page shows a "Pursharth replied HOLD" button during the window.
   if (entry.hold) {
-    const seconds = ctx.step?.hold_window_min ?? 10;
-    ev({ type: 'countdown', title: `HOLD window · ${seconds}:00`, body: 'HOLD window · compressed for demo', json: { seconds, compressed: true } });
+    const minutes = ctx.step?.hold_window_min ?? 10;
+    const seconds = ctx.step?.hold_window_s ?? minutes;
+    ev({ type: 'countdown', title: `HOLD window · ${minutes}:00`, body: 'HOLD window · compressed for demo', seconds, json: { seconds, minutes, compressed: true } });
     if (wait) halt = Boolean(await waitAck(`${key}:hold`, seconds * 1000));
     ev(halt ? { type: 'info', title: 'HOLD received → stopping' } : { type: 'info', title: 'No HOLD received → proceed' });
   }
 
   for (const id of acks.keys()) if (id.startsWith(`${key}:`)) acks.delete(id);
   // Events already streamed through ctx.emit are not returned again (the orchestrator shows returned ones).
-  return { events: ctx.emit ? [] : events, statePatch: {}, artifacts: {}, halt, result: { halt } };
+  return { events: ctx.emit ? [] : events, statePatch: {}, artifacts: {}, halt, result: { halt, hold: halt } };
 }
 
 export async function run(ctx) {

@@ -339,8 +339,7 @@ async function runStep(step, facts, token) {
     case 'notify_caregiver':
       if (res.hold) return { ok: false, stop: 'hold', reason: `HOLD received${res.reply ? ` ("${res.reply}")` : ''}` };
       advanceClock((Number(step.hold_window_min) || 10) * 60 - HOLD_WINDOW_S);
-      agent('no HOLD received → proceed', token);
-      return { ok: true };
+      return { ok: true };   // whatsapp.js already shows "No HOLD received → proceed"
     case 'book_appointment':
       return res.confirmed === false ? { ok: false, reason: 'clinic did not confirm a slot' } : { ok: true };
     case 'create_order':

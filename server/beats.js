@@ -17,11 +17,11 @@ const mod = (name) => ({ kind: 'module', name });
 const wa = (step, args = {}) => ({ kind: 'whatsapp', step: { step, ...args } });   // a cued WhatsApp exchange
 
 // Before the trigger: records consolidated and away mode on. Skipped with PREROLL=0.
+// Documents and the "Amlodipine or Amlokind?" question happen on the web upload screen
+// (web/onboarding), so they are not WhatsApp steps.
 export const PREROLL = [
-  wa('documents_received'),                                         // Pursharth forwards 4 documents; Sanjeevani acknowledges
   say('agent', 'SCRIPTED', 'info', 'records · 4 of Maa\'s documents read', { body: 'Prescription, 2 lab reports, discharge summary' }),
   mod('hf_ocr'),
-  wa('confirm_medicine_name', { options: ['Amlodipine', 'Amlokind'] }),  // asks; Pursharth replies "Amlodipine"
   mod('fhir'),
   wa('away_mode'),                                                  // "Flying to Delhi, back Sunday" → "Got it ✈ …"
   say('agent', 'SCRIPTED', 'info', 'caregiver.away = true · backup = Rohan', { body: 'Pursharth flies to Delhi, back Sun 11 Oct' }),

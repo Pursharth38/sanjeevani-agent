@@ -218,7 +218,7 @@ function callEvents(record) {
 
   if (s.callStatus !== 'ANSWERED') {
     events.push({ id: 'evt_08g2', beat: 8, t: storyTime(STORY_CALL_START), source: 'gnani', label: 'LIVE', type: 'info', title: `Call not answered (${s.callStatus})` });
-    return { events, statePatch: {}, artifacts: {} };
+    return { events, statePatch: {}, artifacts: {}, result: { confirmed: false, slot: null } };
   }
 
   events.push({
@@ -247,7 +247,13 @@ function callEvents(record) {
     title: confirmed ? 'Slot confirmed on the call · Sat 10 Oct 11:00' : 'Call ended · see transcript for the slot',
     body: 'Dr. Mehta · Cardiology',
   });
-  return { events, statePatch: {}, artifacts: record.audio ? { audio: record.audio } : {} };
+  // The orchestrator only proceeds if the call itself confirmed the slot.
+  return {
+    events,
+    statePatch: {},
+    artifacts: record.audio ? { audio: record.audio } : {},
+    result: { confirmed, slot: confirmed ? APPT : null },
+  };
 }
 
 // A call placed from the dashboard (Test → Trigger Agent Call): import the transcript copied from
