@@ -251,10 +251,35 @@
     ui.countdown = { step: evt.step, end };
   }
 
+  // A call in progress: a timer counting up until the step's next row (e.g. "Call ended") arrives.
+  function callTimer(container, evt, instant) {
+    const box = el('div', 'countdown call', `<span class="big"></span><span class="note">${esc(evt.note || 'On the call')}</span>`);
+    container.appendChild(box);
+    const big = $('.big', box);
+    const fmt = (v) => `${String(Math.floor(v / 60)).padStart(2, '0')}:${String(Math.floor(v % 60)).padStart(2, '0')}`;
+    if (instant) { big.textContent = fmt(Number(evt.seconds) || 0); box.classList.add('over'); return; }
+    const gen = ui.gen;
+    let elapsed = 0;
+    let last = performance.now();   // measure real time, so slowed-down ticks don't slow the clock
+    big.textContent = fmt(0);
+    const tick = () => {
+      const now = performance.now();
+      if (!ui.paused) elapsed += now - last;
+      last = now;
+      big.textContent = fmt(elapsed / 1000);
+    };
+    const end = () => { tick(); clearInterval(timer); box.classList.add('over'); ui.countdown = null; };
+    const timer = setInterval(() => {
+      if (gen !== ui.gen) { clearInterval(timer); return; }
+      tick();
+    }, 100);
+    ui.countdown = { step: evt.step, end };
+  }
+
   async function renderEvent(evt, instant) {
     const gen = ui.gen;
     // The window is over once its step moves on; never show a running timer next to the outcome.
-    if (ui.countdown && evt.type !== 'countdown' && (!evt.step || evt.step === ui.countdown.step)) ui.countdown.end();
+    if (ui.countdown && evt.type !== 'countdown' && evt.type !== 'call' && (!evt.step || evt.step === ui.countdown.step)) ui.countdown.end();
     divider(evt);
     if (evt.t) setClock(evt.t);
     if (evt.type === 'checklist_tick' && evt.step) setStep(evt.step, evt.status || 'done');
@@ -285,6 +310,10 @@
       }
       case 'countdown':
         countdown(body, evt, instant);
+        append(r);
+        break;
+      case 'call':
+        callTimer(body, evt, instant);
         append(r);
         break;
       case 'transcript': {

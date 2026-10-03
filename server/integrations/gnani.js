@@ -137,6 +137,7 @@ async function placeCall(emit = () => {}) {
   const trigger = await inyaJson('POST', `/agents/${botId}/trigger_call?environment=${INYA_ENV}`, triggerRequest);
   const shownRequest = { ...triggerRequest, phone: maskPhone(phone) };
   emit(callTriggerEvent({ request: shownRequest, response: trigger }));
+  emit(callLiveEvent(null));
   console.log(`call triggered (${trigger.requestId}); waiting for it to end…`);
 
   // Find this call in the logs once it has an end time.
@@ -202,11 +203,41 @@ function callTriggerEvent(trigger) {
     label: 'LIVE',
     type: 'request',
     title: `gnani.call → ${CALL_NAME}`,
-    body: trigger.via ? `Outbound call · Inya voice agent · recorded (${trigger.via})` : 'Outbound call · Inya voice agent',
+    body: 'Inya voice agent · earliest Saturday morning follow-up for Mrs. Sunita Sharma (68)',
     json: trigger.via
       ? { via: trigger.via }
       : { request: { url: `${INYA}/agents/{botId}/trigger_call`, ...trigger.request }, response: trigger.response },
   };
+}
+
+// Call length: Gnani's own duration, else first to last timestamped turn (an imported transcript has no
+// timestamp on the greeting, so this is a few seconds short).
+function callSeconds(record) {
+  const s = record.stats;
+  return Math.round(s.callDuration ?? (s.endTime - s.startTime));
+}
+const clock = (sec) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+
+// The console shows a running call timer while the call plays in the video.
+function callLiveEvent(seconds) {
+  return {
+    id: 'evt_08g5',
+    beat: 8,
+    t: storyTime(STORY_CALL_START),
+    source: 'gnani',
+    label: 'LIVE',
+    type: 'call',
+    title: "Call in progress · Dr. Mehta's clinic",
+    note: 'Gnani voice agent · on the call',
+    seconds,
+  };
+}
+
+function sleepUntil(ms, signal) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener('abort', () => { clearTimeout(timer); reject(signal.reason ?? new Error('aborted')); }, { once: true });
+  });
 }
 
 // The slot is only announced if the transcript itself shows it; nothing is assumed.
@@ -221,16 +252,21 @@ function callEvents(record) {
     return { events, statePatch: {}, artifacts: {}, result: { confirmed: false, slot: null } };
   }
 
+  // The call itself is shown in the video; the console shows it ended, with the transcript in the details.
   events.push({
     id: 'evt_08g2',
     beat: 8,
-    t: storyTime(offset(turns[0]?.timestamp ?? s.startTime)),
+    t: storyTime(offset(s.endTime)),
     source: 'gnani',
     label: 'LIVE',
-    type: 'transcript',
-    title: s.callDuration ? `Call transcript · ${s.callDuration}s` : 'Call transcript',
-    lines: turns.map((u) => ({ speaker: u.role === 'assistant' ? 'Agent' : 'Clinic', text: u.content })),
-    json: { conversationId: record.conversationId, callStatus: s.callStatus, disposition: s.overallCallDisposition },
+    type: 'info',
+    title: `Call ended · ${clock(callSeconds(record))}`,
+    body: "Dr. Mehta's clinic",
+    json: {
+      conversationId: record.conversationId,
+      callStatus: s.callStatus,
+      transcript: turns.map((u) => ({ speaker: u.role === 'assistant' ? 'Agent' : 'Clinic', text: u.content })),
+    },
   });
   if (record.audio) {
     events.push({ id: 'evt_08g3', beat: 8, t: storyTime(offset(s.endTime)), source: 'gnani', label: 'LIVE', type: 'audio', title: 'Call recording', src: record.audio });
@@ -325,12 +361,23 @@ export async function run(ctx) {
   // call is triggered by hand from the Gnani dashboard and the saved real call is used, else the fixture.
   if (ctx.mode === 'live' && process.env.INYA_API_KEY) {
     const out = callEvents(await placeCall(ctx.emit));
-    // The trigger row was already streamed through ctx.emit; don't return it twice.
+    // The trigger and in-progress rows were already streamed through ctx.emit; don't return them twice.
     if (ctx.emit) out.events = out.events.filter((e) => e.id !== 'evt_08g1');
     return out;
   }
   const record = readJson('cache/gnani_call.json');
-  return record ? callEvents(record) : readJson('fixtures/gnani_call.json');
+  if (!record) return readJson('fixtures/gnani_call.json');
+  const out = callEvents(record);
+  // Replay of the real call: hold the step for the call's length + 10 s (CALL_WAIT_S overrides) while
+  // the recorded call plays in the video, with a running timer in the console.
+  const waitS = process.env.CALL_WAIT_S != null ? Number(process.env.CALL_WAIT_S) : callSeconds(record) + 10;
+  if (ctx.emit && waitS > 0 && record.stats.callStatus === 'ANSWERED') {
+    ctx.emit(out.events[0]);
+    ctx.emit(callLiveEvent(waitS));
+    await sleepUntil(waitS * 1000, ctx.signal);
+    out.events = out.events.slice(1);
+  }
+  return out;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -355,7 +402,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const record = importCall(file, date, at('--audio'));
     for (const e of callEvents(record).events) {
       console.log(`${e.label} · ${e.type} · ${e.title}`);
-      for (const l of e.lines ?? []) console.log(`    ${l.speaker}: ${l.text}`);
+      for (const l of e.json?.transcript ?? []) console.log(`    ${l.speaker}: ${l.text}`);
     }
   } else if (args.includes('--agents')) {
     if (!process.env.INYA_API_KEY) {
@@ -379,7 +426,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       .then((record) => {
         for (const e of callEvents(record).events) {
           console.log(`${e.label} · ${e.type} · ${e.title}`);
-          for (const l of e.lines ?? []) console.log(`    ${l.speaker}: ${l.text}`);
+          for (const l of e.json?.transcript ?? []) console.log(`    ${l.speaker}: ${l.text}`);
         }
       })
       .catch((err) => { console.error(err.message); process.exit(1); });
