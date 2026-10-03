@@ -1,0 +1,12 @@
+{
+  "name": "sanjeevani-agent",
+  "private": true,
+  "description": "Sanjeevani agent demo: orchestrator, integrations, agent console, cue page and dashboard",
+  "type": "module",
+  "scripts": {
+    "demo": "node server/orchestrator.js"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}

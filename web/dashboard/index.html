@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" class="auth-pending">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard · Sanjeevani</title>
+  <meta name="theme-color" content="#FFFFFF">
+  <link rel="icon" type="image/png" href="assets/web/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="app">
+  <!-- ============ Sidebar ============ -->
+  <aside class="side" aria-label="Sidebar">
+    <a class="brand side-logo" href="#/overview" aria-label="Sanjeevani overview"><img src="assets/web/mark.png" alt="" width="32" height="32"><span>SANJEEVANI</span></a>
+    <nav class="side-nav" id="sideNav" aria-label="Main">
+      <a href="#/overview" data-route="overview" data-nav="overview"><svg class="ic"><use href="#i-grid"/></svg>Overview</a>
+      <a href="#/overview" data-route="overview" data-scroll="meds"><svg class="ic"><use href="#i-pill"/></svg>Medicines</a>
+      <a href="#/records" data-route="records" data-nav="records"><svg class="ic"><use href="#i-file"/></svg>Records (ABHA)</a>
+      <a href="#/overview" data-route="overview" data-scroll="upcoming"><svg class="ic"><use href="#i-cal"/></svg>Appointments</a>
+      <a href="#/overview" data-route="overview" data-scroll="activity"><svg class="ic"><use href="#i-list"/></svg>Activity</a>
+      <a href="#/overview" data-route="overview" data-scroll="care"><svg class="ic"><use href="#i-users"/></svg>Family &amp; access</a>
+      <a href="#/overview" data-route="overview"><svg class="ic"><use href="#i-sliders"/></svg>Settings</a>
+    </nav>
+    <div class="side-foot">
+      <div class="wa"><svg class="ic"><use href="#i-chat"/></svg><span><b>WhatsApp connected ✓</b><small id="sidePhone">+91 98••• ••210</small></span></div>
+    </div>
+  </aside>
+
+  <!-- ============ Main ============ -->
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <main class="content" id="view" tabindex="-1"></main>
+  </div>
+</div>
+
+<!-- Mobile bottom nav -->
+<nav class="bnav" aria-label="Mobile">
+  <a href="#/overview" data-nav="overview"><svg class="ic"><use href="#i-grid"/></svg>Overview</a>
+  <a href="#/records" data-nav="records"><svg class="ic"><use href="#i-file"/></svg>Records</a>
+  <a href="#/overview" data-scroll="activity"><svg class="ic"><use href="#i-list"/></svg>Activity</a>
+  <a href="#/overview" data-scroll="care"><svg class="ic"><use href="#i-users"/></svg>Family</a>
+</nav>
+
+<!-- Record drawer -->
+<div class="drawer-wrap" id="drawer" hidden>
+  <div class="drawer-overlay" data-action="close-drawer"></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" id="drawerPanel"></aside>
+</div>
+
+<!-- Demo controls (Shift + D) -->
+<div class="demo" id="demo" hidden>
+  <div class="demo-h"><span><svg class="ic-sm"><use href="#i-zap"/></svg>Demo controls</span><button type="button" data-action="close-demo" aria-label="Close demo controls"><svg class="ic-sm"><use href="#i-x"/></svg></button></div>
+  <ol class="demo-steps" id="demoSteps"></ol>
+  <div class="demo-f">
+    <button class="btn btn--secondary btn--xs" type="button" data-action="demo-prev"><svg class="ic-xs"><use href="#i-left"/></svg>Prev</button>
+    <span id="demoSrc" class="demo-src"></span>
+    <button class="btn btn--primary btn--xs" type="button" data-action="demo-next">Next<svg class="ic-xs"><use href="#i-right"/></svg></button>
+  </div>
+</div>
+
+<div class="tip" id="tip" role="tooltip"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="js/demo-state.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

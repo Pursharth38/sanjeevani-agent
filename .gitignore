@@ -1,0 +1,11 @@
+# Secrets
+.env
+.env.local
+
+# Dependencies / tooling
+node_modules/
+
+# Personal Claude Code settings
+.claude/settings.local.json
+
+# Note: cache/*.json and data/audio/* ARE committed; the recording depends on them.

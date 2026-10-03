@@ -1,0 +1,1161 @@
+{
+  "rev": "snapshot",
+  "step": 0,
+  "today": "2026-10-03",
+  "updated": "2 min ago",
+  "caregiver": {
+    "name": "Pursharth",
+    "family": "Sharma family",
+    "initials": "PS",
+    "phone": "+91 98••• ••210",
+    "away": false,
+    "away_until": "Mon, 12 Oct"
+  },
+  "backup": {
+    "name": "Rohan",
+    "relation": "brother",
+    "reachable": true
+  },
+  "members": [
+    {
+      "id": "maa",
+      "name": "Maa",
+      "tab": "Maa",
+      "full": "Sunita Sharma",
+      "age": 68,
+      "sex": "F",
+      "city": "Lucknow",
+      "initials": "M",
+      "abha": "91-••••-••••-4821",
+      "abhaLinked": true,
+      "lang": "Hindi",
+      "allergies": "None recorded",
+      "medicines": [
+        {
+          "id": "telma",
+          "name": "Telmisartan 40mg",
+          "freq": "once daily",
+          "days": 24,
+          "pharmacy": "Apollo Pharmacy",
+          "next": {
+            "kind": "auto",
+            "text": "Reorders automatically in 17 days"
+          },
+          "confirmed": "delivery, 9 Sep"
+        },
+        {
+          "id": "metf",
+          "name": "Metformin 1000mg",
+          "freq": "twice daily",
+          "days": 11,
+          "pharmacy": "Apollo Pharmacy",
+          "next": {
+            "kind": "auto",
+            "text": "Reorders automatically in 4 days"
+          },
+          "confirmed": "delivery, 22 Sep"
+        },
+        {
+          "id": "amlo",
+          "name": "Amlodipine 5mg",
+          "freq": "once daily",
+          "days": 3,
+          "pharmacy": "Apollo Pharmacy",
+          "next": {
+            "kind": "placed",
+            "text": "Reorder placed today · arriving Thu"
+          },
+          "confirmed": "delivery, 2 Sep"
+        }
+      ],
+      "trends": [
+        {
+          "id": "hba1c",
+          "metric": "HbA1c",
+          "unit": "%",
+          "band": [
+            6.5,
+            7
+          ],
+          "dates": [
+            "12 Jan",
+            "20 Mar",
+            "28 May",
+            "30 Jul",
+            "28 Sep"
+          ],
+          "values": [
+            6.8,
+            6.9,
+            7.1,
+            7.2,
+            7.4
+          ],
+          "display": "7.4 %",
+          "dir": "up",
+          "last": "28 Sep",
+          "flag": "3 readings rising — mention to Dr. Mehta"
+        },
+        {
+          "id": "bp",
+          "metric": "BP",
+          "unit": "mmHg",
+          "band": [
+            120,
+            135
+          ],
+          "dates": [
+            "29 Sep",
+            "30 Sep",
+            "1 Oct",
+            "2 Oct",
+            "Today"
+          ],
+          "values": [
+            128,
+            131,
+            130,
+            133,
+            132
+          ],
+          "labels": [
+            "128/82",
+            "131/84",
+            "130/83",
+            "133/85",
+            "132/84"
+          ],
+          "display": "132/84",
+          "dir": "flat",
+          "last": "today",
+          "status": "Stable"
+        },
+        {
+          "id": "creat",
+          "metric": "Creatinine",
+          "unit": "mg/dL",
+          "band": [
+            0.6,
+            1.1
+          ],
+          "dates": [
+            "10 Feb",
+            "15 May",
+            "12 Aug"
+          ],
+          "values": [
+            0.9,
+            0.9,
+            0.9
+          ],
+          "display": "0.9",
+          "dir": "flat",
+          "last": "12 Aug",
+          "flag": "Test due — last done 7 weeks ago"
+        }
+      ],
+      "appt": {
+        "doctor": "Dr. Mehta",
+        "spec": "Cardiology",
+        "date": "12 Oct",
+        "time": "11:00",
+        "status": "good",
+        "word": "Confirmed"
+      },
+      "lastTest": {
+        "text": "HbA1c 7.4",
+        "kind": "warn",
+        "date": "28 Sep"
+      },
+      "lastRefill": {
+        "where": "Apollo Pharmacy",
+        "when": "Fri 2 Oct"
+      },
+      "kpi": {
+        "missed": 0,
+        "days": 21,
+        "nextReorder": "Metformin, Wed"
+      },
+      "visits": [
+        "12 Sep · Dr. Mehta, Cardiology · BP review",
+        "28 Aug · Dr. Rao, General Medicine · Diabetes follow-up",
+        "4 Jun · Sahara Hospital · Discharged after 2-day observation"
+      ]
+    },
+    {
+      "id": "papa",
+      "name": "Papa",
+      "tab": "Papa",
+      "full": "Ramesh Sharma",
+      "age": 72,
+      "sex": "M",
+      "city": "Lucknow",
+      "initials": "P",
+      "abha": null,
+      "abhaLinked": false,
+      "lang": "Hindi",
+      "allergies": "Sulfa drugs (from family)",
+      "medicines": [
+        {
+          "id": "meto",
+          "name": "Metoprolol 25mg",
+          "freq": "once daily",
+          "days": 19,
+          "pharmacy": "Apollo Pharmacy",
+          "next": {
+            "kind": "auto",
+            "text": "Reorders automatically in 12 days"
+          },
+          "confirmed": "delivery, 14 Sep"
+        },
+        {
+          "id": "glim",
+          "name": "Glimepiride 1mg",
+          "freq": "once daily",
+          "days": 14,
+          "pharmacy": "Apollo Pharmacy",
+          "next": {
+            "kind": "auto",
+            "text": "Reorders automatically in 7 days"
+          },
+          "confirmed": "delivery, 19 Sep"
+        }
+      ],
+      "trends": [
+        {
+          "id": "fbs",
+          "metric": "Fasting sugar",
+          "unit": "mg/dL",
+          "band": [
+            80,
+            130
+          ],
+          "dates": [
+            "2 Sep",
+            "9 Sep",
+            "16 Sep",
+            "23 Sep",
+            "30 Sep"
+          ],
+          "values": [
+            118,
+            124,
+            121,
+            126,
+            122
+          ],
+          "display": "122",
+          "dir": "flat",
+          "last": "30 Sep",
+          "status": "Stable"
+        },
+        {
+          "id": "bp2",
+          "metric": "BP",
+          "unit": "mmHg",
+          "band": [
+            120,
+            140
+          ],
+          "dates": [
+            "29 Sep",
+            "30 Sep",
+            "1 Oct",
+            "2 Oct",
+            "Today"
+          ],
+          "values": [
+            136,
+            138,
+            137,
+            139,
+            138
+          ],
+          "labels": [
+            "136/86",
+            "138/88",
+            "137/86",
+            "139/88",
+            "138/86"
+          ],
+          "display": "138/86",
+          "dir": "flat",
+          "last": "today",
+          "status": "Stable"
+        }
+      ],
+      "appt": {
+        "doctor": "Dr. Rao",
+        "spec": "General Medicine",
+        "date": "16 Oct",
+        "time": "10:30",
+        "status": "neutral",
+        "word": "Waiting"
+      },
+      "lastTest": {
+        "text": "Fasting sugar 122",
+        "kind": "good",
+        "date": "30 Sep"
+      },
+      "lastRefill": {
+        "where": "Apollo Pharmacy",
+        "when": "Sat 19 Sep"
+      },
+      "kpi": {
+        "missed": 0,
+        "days": 14,
+        "nextReorder": "Glimepiride, Sat 10"
+      },
+      "visits": [
+        "30 Sep · Dr. Rao, General Medicine · New prescription"
+      ]
+    },
+    {
+      "id": "mummyji",
+      "name": "Mummy-ji",
+      "tab": "Mummy-ji",
+      "full": "Kamla Verma",
+      "age": 70,
+      "sex": "F",
+      "city": "Kanpur",
+      "initials": "MJ",
+      "abha": null,
+      "abhaLinked": false,
+      "lang": "Hindi",
+      "allergies": "None recorded",
+      "medicines": [
+        {
+          "id": "levo",
+          "name": "Levothyroxine 50mcg",
+          "freq": "once daily",
+          "days": 26,
+          "pharmacy": "Kanpur Medicos",
+          "next": {
+            "kind": "auto",
+            "text": "Reorders automatically in 19 days"
+          },
+          "confirmed": "delivery, 7 Sep"
+        },
+        {
+          "id": "calc",
+          "name": "Calcium + D3",
+          "freq": "once daily",
+          "days": 9,
+          "pharmacy": "Kanpur Medicos",
+          "next": {
+            "kind": "auto",
+            "text": "Reorders automatically in 2 days"
+          },
+          "confirmed": null,
+          "stale": "30 Sep"
+        }
+      ],
+      "trends": [
+        {
+          "id": "tsh",
+          "metric": "TSH",
+          "unit": "mIU/L",
+          "band": [
+            0.5,
+            4.5
+          ],
+          "dates": [
+            "14 Feb",
+            "20 May",
+            "25 Aug"
+          ],
+          "values": [
+            3.4,
+            3.1,
+            2.9
+          ],
+          "display": "2.9",
+          "dir": "down",
+          "last": "25 Aug",
+          "status": "Stable"
+        }
+      ],
+      "appt": null,
+      "lastTest": {
+        "text": "TSH 2.9",
+        "kind": "good",
+        "date": "25 Aug"
+      },
+      "lastRefill": {
+        "where": "Kanpur Medicos",
+        "when": "Wed 30 Sep"
+      },
+      "kpi": {
+        "missed": 0,
+        "days": 9,
+        "nextReorder": "Calcium + D3, Mon"
+      },
+      "visits": [
+        "25 Aug · Dr. Verma, Endocrinology · Thyroid review"
+      ]
+    },
+    {
+      "id": "anya",
+      "name": "Anya",
+      "tab": "Anya (daughter)",
+      "full": "Anya Sharma",
+      "age": 9,
+      "sex": "F",
+      "city": "Bengaluru",
+      "initials": "A",
+      "abha": null,
+      "abhaLinked": false,
+      "lang": "English",
+      "allergies": "Peanuts",
+      "medicines": [],
+      "trends": [],
+      "appt": null,
+      "lastTest": null,
+      "lastRefill": null,
+      "kpi": {
+        "missed": 0,
+        "days": null,
+        "nextReorder": "No regular medicines"
+      },
+      "visits": [
+        "14 Aug · Dr. Kulkarni, Paediatrics · Annual check-up"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "rosu",
+      "member": "papa",
+      "kind": "approve",
+      "title": "New prescription from Dr. Rao — add Rosuvastatin 10mg to Papa's refills?",
+      "context": "Read from photo, 30 Sep · 96% confidence",
+      "primary": "Add to refills",
+      "secondary": "Review"
+    },
+    {
+      "id": "amlo-name",
+      "member": "mummyji",
+      "kind": "choice",
+      "title": "Couldn't read one medicine name clearly",
+      "context": "Dr. Verma's prescription for Mummy-ji, 1 Oct",
+      "options": [
+        "Amlodipine",
+        "Amlokind"
+      ]
+    }
+  ],
+  "delivery": {
+    "item": "Amlodipine 5mg",
+    "member": "maa",
+    "city": "Lucknow",
+    "route": "local",
+    "done": 5,
+    "steps": [
+      {
+        "label": "Reorder triggered",
+        "time": "Today 09:58"
+      },
+      {
+        "label": "You were told (no STOP)",
+        "time": "10:08"
+      },
+      {
+        "label": "Apollo confirmed stock",
+        "time": "10:11"
+      },
+      {
+        "label": "Paid ₹184 · Pine Labs",
+        "time": "10:13"
+      },
+      {
+        "label": "Shipped · Local partner",
+        "time": "13:40",
+        "chip": true
+      },
+      {
+        "label": "Delivered",
+        "time": "Expected Thu",
+        "doneTime": "Thu 11:20"
+      },
+      {
+        "label": "Maa told by voice note",
+        "time": "after delivery",
+        "doneTime": "Thu 11:24"
+      }
+    ]
+  },
+  "activity": [
+    {
+      "id": "a-voice-eta",
+      "member": "maa",
+      "icon": "voice",
+      "cat": "medicine",
+      "week": true,
+      "tag": "sanjeevani",
+      "time": "Today 2:05pm",
+      "text": "Maa was told her medicine arrives Thursday",
+      "sub": "Voice note, Hindi · ● Acknowledged: 'theek hai'",
+      "detail": {
+        "trigger": "Amlodipine shipped for Maa",
+        "did": [
+          "Gnani recorded an 18-second voice note in Hindi",
+          "Sent to Maa's WhatsApp at 14:05",
+          "Maa replied 'theek hai' at 14:09"
+        ],
+        "window": "Outcome only — Maa is never asked to decide anything",
+        "proof": [
+          "wamid.HBgM…4F2"
+        ]
+      }
+    },
+    {
+      "id": "a-shipped",
+      "member": "maa",
+      "icon": "truck",
+      "cat": "medicine",
+      "week": true,
+      "tag": "sanjeevani",
+      "time": "Today 1:40pm",
+      "text": "Amlodipine shipped via local partner (Lucknow)",
+      "sub": "Picked up from Apollo Pharmacy, Gomti Nagar · arriving Thu",
+      "detail": {
+        "trigger": "Payment confirmed",
+        "did": [
+          "No same-week Delhivery slot for pincode 226010",
+          "Routed to local partner · Tier-2",
+          "Pickup confirmed at 13:40"
+        ],
+        "window": "Within your limits · no approval needed",
+        "proof": [
+          "Waybill LKO-LP-20931"
+        ]
+      }
+    },
+    {
+      "id": "a-paid",
+      "member": "maa",
+      "icon": "card",
+      "cat": "medicine",
+      "week": true,
+      "tag": "sanjeevani",
+      "time": "Today 10:13am",
+      "text": "₹184 paid to Apollo Pharmacy",
+      "sub": "Pine Labs mandate · ₹1,816 left this month",
+      "detail": {
+        "trigger": "Apollo confirmed stock",
+        "did": [
+          "Checked ₹184 against your ₹3,000 monthly cap",
+          "Pine Labs UPI AutoPay debit at 10:13"
+        ],
+        "window": "Inside your mandate · anything above it comes to you first",
+        "proof": [
+          "Pine Labs txn PL-UPI-77120458"
+        ],
+        "undo": "Request refund"
+      }
+    },
+    {
+      "id": "a-reorder",
+      "member": "maa",
+      "icon": "pill",
+      "cat": "medicine",
+      "week": true,
+      "tag": "sanjeevani",
+      "time": "Today 10:12am",
+      "text": "Reordered Maa's Amlodipine from Apollo Pharmacy",
+      "sub": "You were told at 09:58 · no STOP received · ₹184 via mandate",
+      "detail": {
+        "trigger": "Stock hit 3 days",
+        "did": [
+          "Gnani call to Apollo Pharmacy · stock confirmed (10:11)",
+          "Pine Labs debit ₹184 (10:13)",
+          "Local partner pickup booked"
+        ],
+        "window": "Told you 09:58 · 10-min STOP window · no reply",
+        "proof": [
+          "Order APL-LKO-55812"
+        ],
+        "undo": "Undo order (until dispatch)"
+      }
+    },
+    {
+      "id": "a-readrx",
+      "member": "maa",
+      "icon": "file",
+      "cat": "record",
+      "week": true,
+      "tag": "asked",
+      "time": "Yesterday",
+      "text": "Read Dr. Mehta's prescription · 1 name confirmed by you",
+      "sub": "'Amlodipine' or 'Amlokind'? You picked Amlodipine",
+      "detail": {
+        "trigger": "Photo shared in the family WhatsApp group",
+        "did": [
+          "Read 3 medicines from handwriting",
+          "One name below 70% confidence — asked you",
+          "Saved to ABHA as MedicationRequest"
+        ],
+        "window": "Asked you at 18:20 · you replied at 18:31",
+        "proof": [
+          "ABHA txn 7f3c…a91"
+        ]
+      }
+    },
+    {
+      "id": "a-appt",
+      "member": "maa",
+      "icon": "cal",
+      "cat": "appointment",
+      "week": true,
+      "tag": "you",
+      "time": "Mon",
+      "text": "Confirmed cardiology appointment with Dr. Mehta, 12 Oct",
+      "sub": "11:00 · Dr. Mehta Heart Clinic, Hazratganj",
+      "detail": {
+        "trigger": "Dr. Mehta asked for a follow-up in 4 weeks",
+        "did": [
+          "Found 3 open slots by phone (Gnani)",
+          "You picked Mon 12 Oct, 11:00",
+          "Clinic confirmed by SMS"
+        ],
+        "window": "New appointments always need your OK",
+        "proof": [
+          "Clinic ref HC-1012-07"
+        ]
+      }
+    },
+    {
+      "id": "a-reports",
+      "member": "maa",
+      "icon": "file",
+      "cat": "record",
+      "week": true,
+      "tag": "sanjeevani",
+      "time": "Mon",
+      "text": "4 reports added to Maa's ABHA record",
+      "sub": "HbA1c, Lipid profile, CBC, Urine routine · Dr. Lal PathLabs",
+      "detail": {
+        "trigger": "Lab emailed the reports",
+        "did": [
+          "Read 4 PDFs",
+          "Converted to FHIR DiagnosticReport",
+          "Pushed to ABHA under consent"
+        ],
+        "window": "Consent valid till Mar 2027",
+        "proof": [
+          "ABHA txn 91ab…3c0",
+          "ABHA txn 91ab…3c1"
+        ]
+      }
+    },
+    {
+      "id": "a-papa-rx",
+      "member": "papa",
+      "icon": "escalate",
+      "cat": "record",
+      "week": false,
+      "tag": "asked",
+      "time": "Wed 30 Sep",
+      "text": "Read Dr. Rao's new prescription for Papa — 1 new medicine needs your OK",
+      "sub": "Rosuvastatin 10mg · not in his standing refills yet",
+      "detail": {
+        "trigger": "Photo shared by Papa on WhatsApp",
+        "did": [
+          "Read 3 medicines (96% confidence)",
+          "Two already in refills, one is new",
+          "New medicines always come to you first"
+        ],
+        "window": "Waiting for you · nothing ordered yet",
+        "proof": [
+          "Kept locally until Papa's ABHA is linked"
+        ]
+      }
+    },
+    {
+      "id": "a-mj-calc",
+      "member": "mummyji",
+      "icon": "truck",
+      "cat": "medicine",
+      "week": false,
+      "tag": "sanjeevani",
+      "time": "Wed 30 Sep",
+      "text": "Mummy-ji's Calcium + D3 handed to local partner (Kanpur)",
+      "sub": "Delivery not confirmed yet · checking with partner",
+      "detail": {
+        "trigger": "Stock reached 7 days",
+        "did": [
+          "Ordered from Kanpur Medicos",
+          "Handed to local partner 30 Sep",
+          "No delivery scan for 48h — marked Unconfirmed"
+        ],
+        "window": "Within your limits",
+        "proof": [
+          "Partner ref KNP-LP-8813"
+        ]
+      }
+    },
+    {
+      "id": "a-mj-sync",
+      "member": "mummyji",
+      "icon": "file",
+      "cat": "record",
+      "week": false,
+      "tag": "failed",
+      "time": "Last week",
+      "text": "Mummy-ji's thyroid report didn't save on the first try",
+      "sub": "ABDM gateway timed out · retried once · kept in your Sanjeevani record",
+      "detail": {
+        "trigger": "Report from Dr. Verma's clinic",
+        "did": [
+          "First push timed out",
+          "Retried after 10 minutes",
+          "Kept locally — her ABHA is not linked yet"
+        ],
+        "window": "No action needed",
+        "proof": [
+          "Retry log RT-2209"
+        ]
+      }
+    }
+  ],
+  "upcoming": [
+    {
+      "day": "Wed 7",
+      "text": "Metformin auto-reorder",
+      "member": "maa",
+      "icon": "pill"
+    },
+    {
+      "day": "Thu 8",
+      "text": "Amlodipine arrives",
+      "member": "maa",
+      "icon": "truck",
+      "id": "arrive"
+    },
+    {
+      "day": "Mon 12",
+      "text": "Dr. Mehta · Cardiology · 11:00",
+      "member": "maa",
+      "icon": "cal",
+      "status": [
+        "good",
+        "Confirmed"
+      ]
+    },
+    {
+      "day": "Thu 15",
+      "text": "Creatinine test due",
+      "member": "maa",
+      "icon": "tube",
+      "status": [
+        "warn",
+        "Not booked"
+      ]
+    },
+    {
+      "day": "Fri 16",
+      "text": "Dr. Rao · General Medicine · 10:30",
+      "member": "papa",
+      "icon": "cal",
+      "status": [
+        "neutral",
+        "Waiting"
+      ]
+    },
+    {
+      "day": "Sat 17",
+      "text": "Typhoid booster due",
+      "member": "anya",
+      "icon": "tube",
+      "status": [
+        "warn",
+        "Not booked"
+      ]
+    }
+  ],
+  "records": [
+    {
+      "id": "r1",
+      "member": "maa",
+      "date": "2 Oct 2026",
+      "ts": 20261002,
+      "type": "rx",
+      "title": "Prescription",
+      "from": "Dr. Mehta · Cardiology",
+      "source": "WhatsApp",
+      "extraction": {
+        "kind": "confirmed"
+      },
+      "abha": "synced",
+      "meds": [
+        "Telmisartan 40mg · OD",
+        "Metformin 1000mg · BD · 30 days",
+        "Amlodipine 5mg · OD"
+      ]
+    },
+    {
+      "id": "r2",
+      "member": "maa",
+      "date": "28 Sep 2026",
+      "ts": 20260928,
+      "type": "lab",
+      "title": "ECG",
+      "from": "Sahara Hospital",
+      "source": "WhatsApp",
+      "extraction": {
+        "kind": "confirm-needed"
+      },
+      "abha": "retrying",
+      "result": "Sinus rhythm · rate 78 bpm"
+    },
+    {
+      "id": "r3",
+      "member": "maa",
+      "date": "28 Sep 2026",
+      "ts": 20260928,
+      "type": "lab",
+      "title": "HbA1c",
+      "from": "Dr. Lal PathLabs",
+      "source": "Email",
+      "extraction": {
+        "kind": "good",
+        "pct": 99
+      },
+      "abha": "synced",
+      "result": "7.4 %"
+    },
+    {
+      "id": "r4",
+      "member": "maa",
+      "date": "28 Sep 2026",
+      "ts": 20260928,
+      "type": "lab",
+      "title": "Lipid profile",
+      "from": "Dr. Lal PathLabs",
+      "source": "Email",
+      "extraction": {
+        "kind": "good",
+        "pct": 98
+      },
+      "abha": "synced",
+      "result": "LDL 118 · HDL 46 · TG 162 mg/dL"
+    },
+    {
+      "id": "r5",
+      "member": "maa",
+      "date": "28 Sep 2026",
+      "ts": 20260928,
+      "type": "lab",
+      "title": "CBC",
+      "from": "Dr. Lal PathLabs",
+      "source": "Email",
+      "extraction": {
+        "kind": "good",
+        "pct": 98
+      },
+      "abha": "synced",
+      "result": "Hb 12.1 g/dL · WBC 7.2k"
+    },
+    {
+      "id": "r6",
+      "member": "maa",
+      "date": "28 Sep 2026",
+      "ts": 20260928,
+      "type": "lab",
+      "title": "Urine routine",
+      "from": "Dr. Lal PathLabs",
+      "source": "Email",
+      "extraction": {
+        "kind": "good",
+        "pct": 97
+      },
+      "abha": "synced",
+      "result": "No abnormality detected"
+    },
+    {
+      "id": "r7",
+      "member": "maa",
+      "date": "12 Sep 2026",
+      "ts": 20260912,
+      "type": "rx",
+      "title": "Prescription",
+      "from": "Dr. Mehta · Cardiology",
+      "source": "WhatsApp",
+      "extraction": {
+        "kind": "good",
+        "pct": 97
+      },
+      "abha": "synced",
+      "meds": [
+        "Telmisartan 40mg · OD",
+        "Amlodipine 5mg · OD"
+      ]
+    },
+    {
+      "id": "r8",
+      "member": "maa",
+      "date": "28 Aug 2026",
+      "ts": 20260828,
+      "type": "rx",
+      "title": "Prescription",
+      "from": "Dr. Rao · General Medicine",
+      "source": "Doctor input",
+      "extraction": {
+        "kind": "good",
+        "pct": 99
+      },
+      "abha": "synced",
+      "meds": [
+        "Metformin 1000mg · BD · 30 days"
+      ]
+    },
+    {
+      "id": "r9",
+      "member": "maa",
+      "date": "12 Aug 2026",
+      "ts": 20260812,
+      "type": "lab",
+      "title": "Kidney function",
+      "from": "Dr. Lal PathLabs",
+      "source": "Email",
+      "extraction": {
+        "kind": "good",
+        "pct": 98
+      },
+      "abha": "synced",
+      "result": "Creatinine 0.9 mg/dL"
+    },
+    {
+      "id": "r10",
+      "member": "maa",
+      "date": "30 Jul 2026",
+      "ts": 20260730,
+      "type": "lab",
+      "title": "HbA1c",
+      "from": "Dr. Lal PathLabs",
+      "source": "Email",
+      "extraction": {
+        "kind": "good",
+        "pct": 99
+      },
+      "abha": "synced",
+      "result": "7.2 %"
+    },
+    {
+      "id": "r11",
+      "member": "maa",
+      "date": "30 Jul 2026",
+      "ts": 20260730,
+      "type": "rx",
+      "title": "Prescription",
+      "from": "Dr. Rao · General Medicine",
+      "source": "WhatsApp",
+      "extraction": {
+        "kind": "good",
+        "pct": 94
+      },
+      "abha": "synced",
+      "meds": [
+        "Metformin 500mg · BD"
+      ]
+    },
+    {
+      "id": "r12",
+      "member": "maa",
+      "date": "4 Jun 2026",
+      "ts": 20260604,
+      "type": "discharge",
+      "title": "Discharge summary",
+      "from": "Sahara Hospital",
+      "source": "Email",
+      "extraction": {
+        "kind": "confirmed"
+      },
+      "abha": "synced",
+      "result": "2-day observation · chest discomfort · ECG and echo normal"
+    },
+    {
+      "id": "r13",
+      "member": "maa",
+      "date": "3 Jun 2026",
+      "ts": 20260603,
+      "type": "scan",
+      "title": "Echocardiogram",
+      "from": "Sahara Hospital",
+      "source": "Email",
+      "extraction": {
+        "kind": "good",
+        "pct": 97
+      },
+      "abha": "synced",
+      "result": "EF 60% · no regional wall motion abnormality"
+    },
+    {
+      "id": "r14",
+      "member": "maa",
+      "date": "28 May 2026",
+      "ts": 20260528,
+      "type": "lab",
+      "title": "HbA1c",
+      "from": "Pathkind Labs",
+      "source": "WhatsApp",
+      "extraction": {
+        "kind": "good",
+        "pct": 95
+      },
+      "abha": "synced",
+      "result": "7.1 %"
+    },
+    {
+      "id": "r15",
+      "member": "maa",
+      "date": "15 May 2026",
+      "ts": 20260515,
+      "type": "lab",
+      "title": "Kidney function",
+      "from": "Pathkind Labs",
+      "source": "WhatsApp",
+      "extraction": {
+        "kind": "good",
+        "pct": 96
+      },
+      "abha": "synced",
+      "result": "Creatinine 0.9 mg/dL"
+    },
+    {
+      "id": "r16",
+      "member": "maa",
+      "date": "15 May 2026",
+      "ts": 20260515,
+      "type": "lab",
+      "title": "Thyroid profile",
+      "from": "Pathkind Labs",
+      "source": "WhatsApp",
+      "extraction": {
+        "kind": "good",
+        "pct": 96
+      },
+      "abha": "synced",
+      "result": "TSH 2.4 mIU/L"
+    },
+    {
+      "id": "r17",
+      "member": "maa",
+      "date": "15 May 2026",
+      "ts": 20260515,
+      "type": "rx",
+      "title": "Prescription",
+      "from": "Sharma Clinic, Aliganj",
+      "source": "WhatsApp",
+      "extraction": {
+        "kind": "good",
+        "pct": 92
+      },
+      "abha": "local",
+      "meds": [
+        "Pantoprazole 40mg · OD · 14 days"
+      ],
+      "note": "Clinic not on ABDM"
+    },
+    {
+      "id": "r18",
+      "member": "maa",
+      "date": "20 Mar 2026",
+      "ts": 20260320,
+      "type": "lab",
+      "title": "HbA1c",
+      "from": "City Diagnostics, Lucknow",
+      "source": "WhatsApp",
+      "extraction": {
+        "kind": "good",
+        "pct": 93
+      },
+      "abha": "local",
+      "result": "6.9 %",
+      "note": "Lab not on ABDM"
+    },
+    {
+      "id": "r19",
+      "member": "maa",
+      "date": "10 Feb 2026",
+      "ts": 20260210,
+      "type": "scan",
+      "title": "Chest X-ray",
+      "from": "Medanta Lucknow",
+      "source": "Email",
+      "extraction": {
+        "kind": "good",
+        "pct": 96
+      },
+      "abha": "synced",
+      "result": "Clear lung fields"
+    },
+    {
+      "id": "r20",
+      "member": "maa",
+      "date": "10 Feb 2026",
+      "ts": 20260210,
+      "type": "scan",
+      "title": "Ultrasound abdomen",
+      "from": "Medanta Lucknow",
+      "source": "WhatsApp",
+      "extraction": {
+        "kind": "good",
+        "pct": 95
+      },
+      "abha": "synced",
+      "result": "Mild fatty liver"
+    },
+    {
+      "id": "r21",
+      "member": "maa",
+      "date": "10 Feb 2026",
+      "ts": 20260210,
+      "type": "rx",
+      "title": "Prescription",
+      "from": "Medanta Lucknow",
+      "source": "Email",
+      "extraction": {
+        "kind": "good",
+        "pct": 98
+      },
+      "abha": "synced",
+      "meds": [
+        "Telmisartan 40mg · OD"
+      ]
+    },
+    {
+      "id": "r22",
+      "member": "maa",
+      "date": "12 Jan 2026",
+      "ts": 20260112,
+      "type": "lab",
+      "title": "HbA1c",
+      "from": "City Diagnostics, Lucknow",
+      "source": "WhatsApp",
+      "extraction": {
+        "kind": "good",
+        "pct": 91
+      },
+      "abha": "local",
+      "result": "6.8 %",
+      "note": "Lab not on ABDM"
+    }
+  ],
+  "abha": {
+    "last_sync": "09:40"
+  },
+  "mandate": {
+    "provider": "Pine Labs",
+    "cap": 3000,
+    "used": 1184,
+    "status": "active",
+    "lastDebit": "₹184 · Apollo · today"
+  },
+  "kpis": {
+    "missed": 0,
+    "days": 21,
+    "nextReorder": "Metformin (Maa), Wed"
+  },
+  "toast": null
+}
