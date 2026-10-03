@@ -9,10 +9,11 @@
 
   const SOURCES = {
     gnani: ['Gnani', '--purple'], pinelabs: ['Pine Labs', '--green'], delhivery: ['Delhivery', '--orange'],
-    hf: ['Hugging Face', '--yellow'], whatsapp: ['WhatsApp', '--teal'], agent: ['Agent', '--blue'], abha: ['ABHA', '--sky']
+    hf: ['Hugging Face', '--yellow'], whatsapp: ['WhatsApp', '--teal'], agent: ['Agent', '--blue'], abha: ['ABHA', '--sky'],
+    clinic: ['Clinic', '--pink']
   };
-  const PHASES = { preroll: 'Records', trigger: 'Trigger', reason: 'Agent plan', execute: 'Acting', delivered: 'Delivered', summary: 'Summary' };
-  const PHASE_ORDER = Object.keys(PHASES);
+  const PHASES = { preroll: 'Records', trigger: 'Trigger', reason: 'Agent plan', execute: 'Acting', delivered: 'Delivered', summary: 'Summary', clinic: 'Clinic' };
+  const PHASE_ORDER = ['preroll', 'trigger', 'reason', 'execute', 'delivered', 'summary'];
   const STEP_TEXT = {
     notify_caregiver: (a) => ['Tell Pursharth', `Reply HOLD within ${a.hold_window_min || 10} min to stop`],
     book_appointment: (a) => ['Book Dr. Mehta', `${a.pref || 'Earliest slot'} · Gnani call`],

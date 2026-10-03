@@ -18,11 +18,14 @@
 //   HOLD_WINDOW_S=10             the 10-minute HOLD window, compressed for the demo
 //
 // HTTP (bound to all interfaces so the teammate's phone can reach /cue; from any other device only
-// the cue routes, /data/* and /webhooks/* answer — run controls and the console are laptop-only)
+// the cue routes, the clinic portal (it has its own login), /data/* and /webhooks/* answer — run
+// controls and the console are laptop-only)
 //   /console/  /onboarding/  /dashboard/ (static, unsynced)  /cue/  /data/*
 //   GET  /events             SSE for the agent console   (hello, phase, evt, control)
 //   GET  /cue-stream         SSE for the cue page: unnamed messages {"beat": N, "step": …}; {"beat": 0} on reset
 //   POST /cue/ack            JSON body → whatsapp.onCueAck(body) → its { status, type, body }
+//   /clinic/  /api/clinic/*  clinic portal (web/clinic, server/clinic.js): login → patient's ABHA →
+//                            prescription by photo or typed → FHIR bundle + mock ABHA link in the console
 //   /pay/                    simulated payment window (web/pay); the console opens it over itself
 //   GET  /pay/session        → pinelabs.paySession();  POST /pay/confirm → pinelabs.onPayConfirm(body)
 //   GET  /status             run status as JSON;  GET /state.json  internal story state (debug)
@@ -54,6 +57,8 @@ import { pathToFileURL } from 'node:url';
 import * as store from './state.js';
 import { ROOT, readFixture, maskSecrets } from './cache.js';
 import { STORY, PREROLL, TRIGGER, STEP_MODULES, ACTION_STEPS, TIMEOUT_S, FALLBACK_PLAN, DELIVERED, SUMMARY_PATCH, SUMMARY_WHATSAPP, CUE_BEAT } from './beats.js';
+import { createClinic } from './clinic.js';
+import { bundleEvent, cardMs, abhaPush } from './integrations/fhir.js';
 
 try { process.loadEnvFile(join(ROOT, '.env')); } catch { /* no .env: replay still works */ }
 
@@ -152,7 +157,7 @@ function emit(raw, token) {
   if (evt.t && !evt.t_source) evt.t_source = evt.t;
   evt.id = `evt_${String(++seq).padStart(4, '0')}`;
   evt.t = storyNow();
-  evt.phase = phase;
+  evt.phase = raw.phase || phase;
   if (currentStep && !evt.step) evt.step = currentStep.step;
   if (evt.json) evt.json = maskSecrets(evt.json);
   if (!evt.label) {
@@ -503,16 +508,18 @@ function togglePause() {
 const status = () => ({ phase, step: currentStep ? currentStep.step : null, running, paused, mode: MODE, preroll: PREROLL_ON, outcome });
 
 /* ---------------- Webhooks ---------------- */
-function readBody(req) {
+// Over the limit, the rest is drained (not stored) so the caller can still answer 413; far over it,
+// the connection is cut.
+function readBody(req, limit = WEBHOOK_MAX_BYTES) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
     req.on('data', (c) => {
       size += c.length;
-      if (size > WEBHOOK_MAX_BYTES) { reject(new Error('body too large')); req.destroy(); return; }
-      chunks.push(c);
+      if (size > limit * 4) { req.destroy(); reject(new Error('body too large')); return; }
+      if (size <= limit) chunks.push(c);
     });
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    req.on('end', () => (size > limit ? reject(new Error('body too large')) : resolve(Buffer.concat(chunks).toString('utf8'))));
     req.on('error', reject);
   });
 }
@@ -571,6 +578,40 @@ async function handleCueAck(req, res) {
   }
 }
 
+/* ---------------- Clinic portal ---------------- */
+// A clinic's prescription appears in the console whenever it arrives (during a run or not):
+// the clinic's submission (real), the FHIR bundle (real), the ABHA link (mock), the agent's check.
+async function showClinicPrescription({ clinic, member, record, bundle, check, newMedicines }) {
+  const token = runToken;
+  const tag = { phase: 'clinic', step: 'clinic_upload' };
+  const n = `${record.medicines.length} medicine${record.medicines.length === 1 ? '' : 's'}`;
+  const out = (e) => emit({ ...tag, ...e }, token);
+  const wait = async (ms) => { await new Promise((r) => setTimeout(r, ms)); return token === runToken; };
+  out({ source: 'clinic', label: 'LIVE', type: 'response', title: `${clinic.name} added a prescription for ${member.name}`,
+    body: record.mode === 'photo' ? `Photo uploaded · ${n} confirmed by the clinic` : `Typed by the clinic · ${n}`,
+    endpoint: 'POST /api/clinic/prescription', http: 200, json: record });
+  if (!(await wait(EVENT_GAP_MS))) return;
+  out(bundleEvent(bundle, check, `Prescription record for ${member.name} from ${clinic.name} · ${n}${record.photo_id ? ' + photo' : ''} · structure checked (${check.references} references resolve)`));
+  if (!(await wait(cardMs(check) + EVENT_GAP_MS))) return;
+  await abhaPush(out, { bundle, abha: member.abha, careContext: `Prescription · ${clinic.doctor} · ${record.date}`, resources: check.resources }, null);
+  if (token !== runToken) return;
+  store.apply({ records: { $prepend: [{
+    id: record.id, member: member.id, date: record.date, ts: Number(record.date.replace(/-/g, '')), type: 'rx', title: 'Prescription',
+    from: `${clinic.doctor} · ${clinic.specialty}`, source: 'Doctor input', extraction: { kind: 'confirmed' }, abha: 'synced',
+    meds: record.medicines.map((m) => [m.name, m.freq, m.duration].filter(Boolean).join(' · '))
+  }] } });
+  const s = store.get();
+  if (!(await wait(EVENT_GAP_MS))) return;
+  // Computed now from the clinic's real input, so LIVE even in replay mode.
+  out(newMedicines.length
+    ? { source: 'agent', label: 'LIVE', type: 'info', title: `new for ${member.name}: ${newMedicines.join(', ')} → needs a person's OK`,
+        body: `Not in ${member.name}'s refills yet. New medicines always go to ${s.caregiver.away ? `${s.backup.name}, while ${s.caregiver.name} is away` : s.caregiver.name} first; nothing is ordered until then.` }
+    : { source: 'agent', label: 'LIVE', type: 'info', title: `all medicines already in ${member.name}'s refills`, body: 'Nothing new to approve' });
+}
+
+const clinic = createClinic({ root: ROOT, getState: () => store.get(), readBody, sendJson, log,
+  onPrescription: (info) => showClinicPrescription(info).catch((e) => log(`  ! clinic console events failed: ${e.message}`)) });
+
 /* ---------------- Simulated payment window ---------------- */
 async function handlePay(req, res, p) {
   const mod = await loadModule('pinelabs');
@@ -594,6 +635,7 @@ async function handlePay(req, res, p) {
 /* ---------------- HTTP ---------------- */
 const STATIC = {
   '/pay/': join(ROOT, 'web', 'pay'),
+  '/clinic/': join(ROOT, 'web', 'clinic'),
   '/console/': join(ROOT, 'web', 'console'),
   '/onboarding/': join(ROOT, 'web', 'onboarding'),
   '/dashboard/': join(ROOT, 'web', 'dashboard'),
@@ -639,7 +681,9 @@ const isProxied = (req) => Boolean(req.headers['x-forwarded-for'] || req.headers
 const isLaptop = (req) => LOOPBACK.has(req.socket.remoteAddress) && !isProxied(req);
 const remoteAllowed = (method, p) =>
   (method === 'POST' && p === '/cue/ack') ||
-  ((method === 'GET' || method === 'HEAD') && (p === '/cue' || p.startsWith('/cue/') || p === '/cue-stream' || p.startsWith('/data/')));
+  ((method === 'GET' || method === 'POST') && p.startsWith('/api/clinic/')) ||
+  ((method === 'GET' || method === 'HEAD') && (p === '/cue' || p.startsWith('/cue/') || p === '/cue-stream' || p.startsWith('/data/') ||
+    p === '/clinic' || p.startsWith('/clinic/') || p.startsWith('/dashboard/assets/')));
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
@@ -650,6 +694,7 @@ const server = http.createServer((req, res) => {
   if (!isLaptop(req) && !remoteAllowed(req.method, p)) return sendJson(res, 403, { error: 'only the cue page is reachable from other devices' });
   if (req.method === 'POST' && p === '/cue/ack') return handleCueAck(req, res);
   if ((req.method === 'GET' && p === '/pay/session') || (req.method === 'POST' && p === '/pay/confirm')) return handlePay(req, res, p);
+  if (p.startsWith('/api/clinic/')) return clinic.handle(req, res, p);
 
   if (req.method === 'POST') {
     if (p === '/next') return sendJson(res, 200, { ok: start(), ...status() });
@@ -660,7 +705,7 @@ const server = http.createServer((req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return sendJson(res, 405, { error: 'method not allowed' });
 
   if (p === '/') { res.writeHead(302, { Location: '/console/' }); return res.end(); }
-  if (['/console', '/onboarding', '/dashboard', '/cue', '/pay'].includes(p)) { res.writeHead(301, { Location: p + '/' }); return res.end(); }
+  if (['/console', '/onboarding', '/dashboard', '/cue', '/pay', '/clinic'].includes(p)) { res.writeHead(301, { Location: p + '/' }); return res.end(); }
   if (p === '/state.json') return sendJson(res, 200, store.json());
   if (p === '/status') return sendJson(res, 200, status());
   if (p === '/events') {
@@ -709,6 +754,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`\nSanjeevani agent runner · MODE=${MODE} · pre-roll ${PREROLL_ON ? 'on' : 'off'} · HOLD window ${HOLD_WINDOW_S}s`);
   console.log(`  console    http://localhost:${PORT}/console/`);
   console.log(`  cue        http://${lan || '<laptop-ip>'}:${PORT}/cue   (teammate's phone, same Wi-Fi)`);
+  console.log(`  clinic     http://localhost:${PORT}/clinic   (also http://${lan || '<laptop-ip>'}:${PORT}/clinic on the same Wi-Fi)`);
   console.log(`  keys       Space start · R reset · P pause · Q quit\n`);
   keyboard();
 });

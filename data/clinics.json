@@ -1,0 +1,25 @@
+{
+  "_note": "Demo clinic accounts. Passwords are salted scrypt hashes (N=16384, keylen 64); the plain demo passwords are not stored here.",
+  "clinics": [
+    {
+      "id": "mehta-heart",
+      "name": "Dr. Mehta Heart Clinic",
+      "doctor": "Dr. Mehta",
+      "specialty": "Cardiology",
+      "city": "Hazratganj, Lucknow",
+      "email": "mehta@clinic.demo",
+      "salt": "c3e0ca7aee77f840c0d6d66780e0a6ae",
+      "hash": "d04a2ba88b236485e4958decf2569c06c013631206f7e5763b577916572f56e988a9d2df2f371e389ae22d26b5f22c02bcaba8a69596a12c979c536ee2e1edd8"
+    },
+    {
+      "id": "rao-medicine",
+      "name": "Dr. Rao General Medicine",
+      "doctor": "Dr. Rao",
+      "specialty": "General Medicine",
+      "city": "Aliganj, Lucknow",
+      "email": "rao@clinic.demo",
+      "salt": "70cd6b19286154fa982e54aed0ed075c",
+      "hash": "ff181ae7d894681c20c105ba0a02e70b5e31de2870b5d964a9fd712f9955260adc2cf2fb1b191b28596ac390e1864edb954a65f890baa2261678bb8195a0f276"
+    }
+  ]
+}

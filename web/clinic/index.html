@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clinic Portal · Sanjeevani</title>
+  <link rel="icon" type="image/png" href="/dashboard/assets/web/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="clinic.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/clinic/"><img src="/dashboard/assets/web/mark.png" alt="" width="28" height="28"><span>SANJEEVANI</span><em>Clinic portal</em></a>
+    <div class="who" id="who" hidden><span id="whoName"></span><button type="button" class="link-btn" id="logout">Log out</button></div>
+  </header>
+
+  <main class="wrap">
+    <!-- 1. Sign in -->
+    <section class="card narrow" id="viewLogin" hidden>
+      <h1>Clinic sign in</h1>
+      <p class="muted">Add a patient's prescription to their Sanjeevani family record.</p>
+      <form id="loginForm" novalidate>
+        <label>Email<input type="email" id="email" autocomplete="username" required></label>
+        <label>Password<input type="password" id="password" autocomplete="current-password" required></label>
+        <p class="error" id="loginError" role="alert"></p>
+        <button type="submit" class="btn primary" id="loginBtn">Sign in</button>
+      </form>
+    </section>
+
+    <!-- 2. Patient -->
+    <section id="viewPatient" hidden>
+      <ol class="steps"><li class="on">Patient</li><li>Prescription</li><li>Saved</li></ol>
+      <div class="card">
+        <h1>Find the patient</h1>
+        <form id="abhaForm" class="row-form" novalidate>
+          <label class="grow">Patient's ABHA number<input id="abha" inputmode="numeric" autocomplete="off" placeholder="91-1234-5678-4821" maxlength="17" required></label>
+          <button type="submit" class="btn primary" id="abhaBtn">Find patient</button>
+        </form>
+        <p class="error" id="abhaError" role="alert"></p>
+        <p class="note">ABHA lookup is simulated in this demo: Sanjeevani matches the number against the families it looks after.</p>
+      </div>
+      <div class="card" id="patientCard" hidden>
+        <div class="patient">
+          <div class="avatar" id="pInitial"></div>
+          <div class="grow">
+            <h2 id="pName"></h2>
+            <p class="muted" id="pMeta"></p>
+            <p class="muted" id="pFamily"></p>
+          </div>
+          <span class="tag" id="pAbha"></span>
+        </div>
+        <h3>Current medicines</h3>
+        <ul class="meds" id="pMeds"></ul>
+        <div class="actions">
+          <button type="button" class="btn secondary" id="otherPatient">Different patient</button>
+          <button type="button" class="btn primary" id="toRx">Add prescription</button>
+        </div>
+      </div>
+      <div class="card" id="historyCard" hidden>
+        <h3>Prescriptions added from this clinic</h3>
+        <ul class="history" id="history"></ul>
+      </div>
+    </section>
+
+    <!-- 3. Prescription -->
+    <section id="viewRx" hidden>
+      <ol class="steps"><li class="done">Patient</li><li class="on">Prescription</li><li>Saved</li></ol>
+      <div class="card">
+        <div class="for"><span class="muted">Prescription for</span> <b id="rxFor"></b> <span class="tag" id="rxAbha"></span></div>
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" class="tab on" data-mode="photo" aria-selected="true">Upload photo</button>
+          <button type="button" role="tab" class="tab" data-mode="typed" aria-selected="false">Type it</button>
+        </div>
+
+        <div id="photoPane">
+          <label class="drop" id="drop">
+            <input type="file" id="file" accept="image/jpeg,image/png,image/webp" capture="environment">
+            <span id="dropText"><b>Choose a photo</b> or drop it here<br><small>JPEG, PNG or WebP · on a phone this opens the camera</small></span>
+            <img id="preview" alt="Prescription photo preview" hidden>
+          </label>
+          <p class="note">Type the medicines from the photo below. The clinic confirms every entry; nothing is read automatically.</p>
+        </div>
+
+        <h3>Medicines</h3>
+        <div class="med-head"><span>Medicine and strength</span><span>How often</span><span>For how long</span><span></span></div>
+        <div id="medRows"></div>
+        <button type="button" class="link-btn" id="addMed">+ Add medicine</button>
+
+        <div class="two">
+          <label>Prescription date<input type="date" id="rxDate"></label>
+          <label class="grow"><span>Notes for the family <small>(optional)</small></span><textarea id="notes" rows="2" maxlength="500" placeholder="e.g. Follow-up in 4 weeks"></textarea></label>
+        </div>
+        <p class="error" id="rxError" role="alert"></p>
+        <div class="actions">
+          <button type="button" class="btn secondary" id="backToPatient">Back</button>
+          <button type="button" class="btn primary" id="saveRx">Save to record</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Saved -->
+    <section id="viewDone" hidden>
+      <ol class="steps"><li class="done">Patient</li><li class="done">Prescription</li><li class="on">Saved</li></ol>
+      <div class="card">
+        <div class="saved"><span class="tick">✓</span><div><h1 id="doneTitle"></h1><p class="muted" id="doneMeta"></p></div></div>
+        <div class="callout" id="newMeds" hidden></div>
+        <div class="split">
+          <div class="grow">
+            <h3>FHIR record <span class="tag green">built</span></h3>
+            <ul class="res" id="doneRes"></ul>
+            <p class="note">Linked to the patient's ABHA <span class="tag orange">simulated</span> · the FHIR record is real; the push to ABDM is simulated in this demo.</p>
+            <details><summary>FHIR Bundle JSON</summary><pre id="doneJson"></pre></details>
+          </div>
+          <img id="donePhoto" class="thumb" alt="Uploaded prescription photo" hidden>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn secondary" id="newPatient">New patient</button>
+          <button type="button" class="btn primary" id="another">Add another for this patient</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="clinic.js"></script>
+</body>
+</html>
