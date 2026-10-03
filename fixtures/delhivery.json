@@ -1,0 +1,51 @@
+{
+  "_fixture": "FAKE placeholder in the shape run() returns. Replaced by cache/delhivery.json once K2 runs. Never record with it.",
+  "events": [
+    {
+      "source": "delhivery",
+      "label": "CACHED",
+      "type": "request",
+      "title": "delhivery.pincode 226001",
+      "json": {
+        "method": "GET",
+        "url": "https://track.delhivery.com/c/api/pin-codes/json/?filter_codes=226001",
+        "headers": {
+          "Authorization": "Token fixture-token-0000"
+        }
+      }
+    },
+    {
+      "source": "delhivery",
+      "label": "CACHED",
+      "type": "response",
+      "title": "226001 serviceable · Lucknow",
+      "json": {
+        "delivery_codes": [
+          {
+            "postal_code": {
+              "pin": 226001,
+              "district": "Lucknow",
+              "state_code": "UP",
+              "pre_paid": "Y",
+              "cod": "Y",
+              "pickup": "Y"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "source": "agent",
+      "label": "SCRIPTED",
+      "type": "info",
+      "title": "route = local_partner (tier-2)",
+      "body": "No same-week Delhivery slot · local partner in Lucknow"
+    }
+  ],
+  "statePatch": {},
+  "result": {
+    "serviceable": true,
+    "route": "local_partner"
+  },
+  "artifacts": {}
+}

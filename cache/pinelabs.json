@@ -1,0 +1,107 @@
+{
+  "saved_at": "2026-10-03T18:45:30.849Z",
+  "recorded_at": "2026-10-03T18:45:30.848Z",
+  "base": "https://pluraluat.v2.pinepg.in",
+  "payment": "simulated",
+  "events": [
+    {
+      "dt_ms": 1,
+      "source": "pinelabs",
+      "label": "SANDBOX",
+      "type": "request",
+      "title": "pinelabs.token · POST /api/auth/v1/token",
+      "json": {
+        "client_id": "••••5cd0",
+        "client_secret": "••••••••",
+        "grant_type": "client_credentials"
+      }
+    },
+    {
+      "dt_ms": 470,
+      "source": "pinelabs",
+      "label": "SANDBOX",
+      "type": "response",
+      "title": "token issued · 200",
+      "json": {
+        "access_token": "••••u0BQ",
+        "refresh_token": "••••",
+        "expires_at": "2026-10-03T20:45:28.483Z"
+      }
+    },
+    {
+      "dt_ms": 470,
+      "source": "pinelabs",
+      "label": "SANDBOX",
+      "type": "request",
+      "title": "pinelabs.checkout.create · ₹184",
+      "json": {
+        "merchant_order_reference": "SNJ-AMLO-0610-MUSQSEPH",
+        "order_amount": {
+          "value": 18400,
+          "currency": "INR"
+        },
+        "integration_mode": "REDIRECT",
+        "pre_auth": false,
+        "allowed_payment_methods": [
+          "CARD"
+        ],
+        "notes": "Amlodipine 5mg × 30 for Maa · Apollo Pharmacy, Lucknow",
+        "callback_url": "https://example.com/sanjeevani/return",
+        "failure_callback_url": "https://example.com/sanjeevani/return",
+        "purchase_details": {
+          "customer": {
+            "first_name": "Pursharth",
+            "customer_id": "SNJ-CG-01"
+          }
+        }
+      }
+    },
+    {
+      "dt_ms": 751,
+      "source": "pinelabs",
+      "label": "SANDBOX",
+      "type": "response",
+      "title": "Order created · ₹184 · v1-261003184528-aa-Cs78GF",
+      "json": {
+        "token": "••••",
+        "order_id": "v1-261003184528-aa-Cs78GF",
+        "redirect_url": "https://pluraluat.v2.pinepg.in/api/v3/checkout-bff/redirect/checkout?token=••••",
+        "response_code": 200,
+        "response_message": "Order Creation Successful."
+      }
+    },
+    {
+      "dt_ms": 751,
+      "source": "pinelabs",
+      "label": "SIMULATED",
+      "type": "info",
+      "title": "payment · simulated card payment",
+      "body": "The Pine Labs UAT order above is real; this payment step is simulated"
+    },
+    {
+      "dt_ms": 2753,
+      "source": "pinelabs",
+      "label": "SIMULATED",
+      "type": "response",
+      "title": "payment confirmed · ₹184 · simulated",
+      "json": {
+        "simulated": true,
+        "pinelabs_order_id": "v1-261003184528-aa-Cs78GF",
+        "merchant_order_reference": "SNJ-AMLO-0610-MUSQSEPH",
+        "amount_inr": 184,
+        "method": "card (test)"
+      }
+    }
+  ],
+  "statePatch": {
+    "mandate": {
+      "used": 1184,
+      "lastDebit": "₹184 · Apollo"
+    }
+  },
+  "result": {
+    "status": "SIMULATED",
+    "order_id": "v1-261003184528-aa-Cs78GF",
+    "confirmed_via": "simulated"
+  }
+}

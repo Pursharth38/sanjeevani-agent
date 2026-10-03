@@ -1,0 +1,91 @@
+{
+  "_fixture": "FAKE placeholder in the shape run() returns. Replaced by cache/pinelabs.json once K1 runs against UAT. Never record with it.",
+  "events": [
+    {
+      "source": "pinelabs",
+      "label": "SANDBOX",
+      "type": "request",
+      "title": "pinelabs.token · POST /api/auth/v1/token",
+      "json": {
+        "client_id": "FIXTURE-CLIENT",
+        "client_secret": "fixture-secret-0000",
+        "grant_type": "client_credentials"
+      }
+    },
+    {
+      "source": "pinelabs",
+      "label": "SANDBOX",
+      "type": "response",
+      "title": "token issued · 200",
+      "json": {
+        "access_token": "fixture-access-token-0000",
+        "expires_at": "2026-10-06T11:13:00+05:30"
+      }
+    },
+    {
+      "source": "pinelabs",
+      "label": "SANDBOX",
+      "type": "request",
+      "title": "pinelabs.order.create · ₹184",
+      "json": {
+        "merchant_order_reference": "SNJ-AMLO-0610",
+        "order_amount": {
+          "value": 18400,
+          "currency": "INR"
+        },
+        "pre_auth": false,
+        "purchase_details": {
+          "customer": {
+            "first_name": "Pursharth",
+            "customer_id": "FIXTURE-CUST"
+          }
+        }
+      }
+    },
+    {
+      "source": "pinelabs",
+      "label": "SANDBOX",
+      "type": "response",
+      "title": "Order created · ₹184 · CREATED",
+      "json": {
+        "data": {
+          "order_id": "FIXTURE-ORDER-0001",
+          "merchant_order_reference": "SNJ-AMLO-0610",
+          "status": "CREATED",
+          "order_amount": {
+            "value": 18400,
+            "currency": "INR"
+          }
+        }
+      }
+    },
+    {
+      "source": "pinelabs",
+      "label": "SANDBOX",
+      "type": "request",
+      "title": "payment · UAT test card",
+      "json": {
+        "order_id": "FIXTURE-ORDER-0001",
+        "payment_method": "CARD",
+        "card": "4012 •••• •••• 1112"
+      }
+    },
+    {
+      "source": "pinelabs",
+      "label": "SANDBOX",
+      "type": "info",
+      "title": "UAT · pending webhook",
+      "body": "Fixture stops here on purpose: a PROCESSED webhook is never faked"
+    }
+  ],
+  "statePatch": {
+    "mandate": {
+      "used": 1184
+    }
+  },
+  "result": {
+    "status": "PENDING",
+    "order_id": "FIXTURE-ORDER-0001"
+  },
+  "artifacts": {}
+}

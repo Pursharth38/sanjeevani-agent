@@ -1,0 +1,23 @@
+{
+  "_fixture": "FAKE placeholder in the shape run() returns. Replaced when K3's fhir.js builds the bundle in code. Never record with it.",
+  "events": [
+    {
+      "source": "abha", "label": "SIMULATED", "type": "response", "title": "fhir.bundle built · Patient + 3 MedicationRequest",
+      "json": {
+        "resourceType": "Bundle", "type": "collection",
+        "entry": [
+          { "resource": { "resourceType": "Patient", "id": "maa", "name": [{ "text": "Sunita Sharma" }], "gender": "female", "identifier": [{ "system": "https://healthid.ndhm.gov.in", "value": "91-xxxx-xxxx-4821" }] } },
+          { "resource": { "resourceType": "MedicationRequest", "status": "active", "intent": "order", "medicationCodeableConcept": { "text": "Telmisartan 40mg" }, "subject": { "reference": "Patient/maa" }, "dosageInstruction": [{ "text": "Once daily" }] } },
+          { "resource": { "resourceType": "MedicationRequest", "status": "active", "intent": "order", "medicationCodeableConcept": { "text": "Metformin 1000mg" }, "subject": { "reference": "Patient/maa" }, "dosageInstruction": [{ "text": "Twice daily" }] } },
+          { "resource": { "resourceType": "MedicationRequest", "status": "active", "intent": "order", "medicationCodeableConcept": { "text": "Amlodipine 5mg" }, "subject": { "reference": "Patient/maa" }, "dosageInstruction": [{ "text": "Once daily" }] } }
+        ]
+      }
+    },
+    {
+      "source": "abha", "label": "SIMULATED", "type": "info", "title": "abha.push · 4 records",
+      "body": "Simulated push to Maa's ABHA 91-xxxx-xxxx-4821"
+    }
+  ],
+  "statePatch": {},
+  "artifacts": {}
+}
