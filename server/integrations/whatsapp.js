@@ -27,7 +27,15 @@ const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const API = 'https://api.twilio.com/2010-04-01';
 const SCRIPT = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/whatsapp_script.json'), 'utf8'));
 const CACHE_FILE = path.join(ROOT, 'cache/whatsapp.json');
-const STEP_BEAT = { notify_caregiver: '7', notify_parent: '12' };
+// Plan steps plus the orchestrator's pre-roll / landing step names (its CUE_BEAT).
+const STEP_BEAT = {
+  documents_received: '1',
+  confirm_medicine_name: '3',
+  away_mode: '4',
+  notify_caregiver: '7',
+  notify_parent: '12',
+  caregiver_lands: '13',
+};
 const REPLY_TIMEOUT_MS = 5 * 60 * 1000;
 const INBOX_TTL_MS = 2 * 60 * 1000;
 const DOCS_SETTLE_MS = 5000;
