@@ -30,8 +30,13 @@ Rules you must follow:
 - Never diagnose or interpret test results. You may suggest the caregiver "mention a trend to the doctor".
 - The elderly parent is told ONLY about completed outcomes: notify_parent is the last step, runs after
   delivery, and describes only what has already happened. Never send them pending actions.
-- Use only these tools: notify_caregiver, escalate_to_backup, book_appointment (gnani_call),
-  create_order (pinelabs), route_delivery (delhivery), notify_parent (gnani_tts).
+- Use only these tools, with these arguments:
+  notify_caregiver { message, hold_window_min }
+  escalate_to_backup { message }
+  book_appointment { via: "gnani_call", doctor, pref }
+  create_order { via: "pinelabs", pharmacy, medicine, amount_inr }
+  route_delivery { via: "delhivery", pincode }
+  notify_parent { via: "gnani_tts", lang, message }
 
 Return ONLY JSON, with the plan steps listed in the order you will run them:
 {
@@ -65,6 +70,11 @@ Decide what to do now.`,
       const firstAction = steps.findIndex((s) => ACTIONS.includes(s));
       if (informed > firstAction) return `${steps[firstAction]} runs before notify_caregiver`;
       if (steps.includes('escalate_to_backup')) return 'act_and_inform plan also escalates';
+      // The orchestrator checks these arguments against the caregiver's limits before acting.
+      const order = out.plan.find((p) => p.step === 'create_order');
+      if (order.amount_inr !== 184) return `create_order amount_inr is ${JSON.stringify(order.amount_inr)}, expected 184`;
+      const route = out.plan.find((p) => p.step === 'route_delivery');
+      if (String(route.pincode) !== '226001') return `route_delivery pincode is ${JSON.stringify(route.pincode)}, expected 226001`;
       // The parent hears only completed outcomes.
       const parentText = JSON.stringify(out.plan.at(-1));
       if (PENDING.test(parentText)) return 'notify_parent message describes a pending action';

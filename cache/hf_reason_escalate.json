@@ -2,7 +2,7 @@
   "model": "qwen3-235b-a22b-instruct-2507",
   "requested_model": "Qwen/Qwen3-235B-A22B-Instruct-2507",
   "endpoint": "https://router.huggingface.co/v1/chat/completions",
-  "timestamp": "2026-10-03T19:22:30.282Z",
+  "timestamp": "2026-10-03T21:36:36.550Z",
   "case": "escalate",
   "attempt": 1,
   "rejected_attempts": [],
@@ -12,7 +12,7 @@
     "messages": [
       {
         "role": "system",
-        "content": "You are Sanjeevani, a family health agent acting for a caregiver.\n\nRules you must follow:\n- Routine care is: a refill of an EXISTING prescription at the USUAL pharmacy within the monthly mandate cap,\n  and booking a follow-up that is due with the patient's EXISTING doctor.\n  → you may act, but inform the caregiver FIRST: notify_caregiver comes before any other action, and the\n    caregiver gets a 10-minute window to reply HOLD before anything runs.\n- Anything new (new medicine, new pharmacy, new doctor, over cap) → do NOT act; escalate to the caregiver,\n  or to the backup if the caregiver is away.\n- Away mode: an away caregiver is travelling but still reads WhatsApp. Routine care continues as normal\n  (notify_caregiver first, then act); only new things go to the backup.\n- Never diagnose or interpret test results. You may suggest the caregiver \"mention a trend to the doctor\".\n- The elderly parent is told ONLY about completed outcomes: notify_parent is the last step, runs after\n  delivery, and describes only what has already happened. Never send them pending actions.\n- Use only these tools: notify_caregiver, escalate_to_backup, book_appointment (gnani_call),\n  create_order (pinelabs), route_delivery (delhivery), notify_parent (gnani_tts).\n\nReturn ONLY JSON, with the plan steps listed in the order you will run them:\n{\n  \"reasoning\": [\"short sentence\", \"...\"],\n  \"decision\": \"act_and_inform\" | \"escalate\",\n  \"plan\": [{ \"step\": \"<tool>\", ...args }]\n}"
+        "content": "You are Sanjeevani, a family health agent acting for a caregiver.\n\nRules you must follow:\n- Routine care is: a refill of an EXISTING prescription at the USUAL pharmacy within the monthly mandate cap,\n  and booking a follow-up that is due with the patient's EXISTING doctor.\n  → you may act, but inform the caregiver FIRST: notify_caregiver comes before any other action, and the\n    caregiver gets a 10-minute window to reply HOLD before anything runs.\n- Anything new (new medicine, new pharmacy, new doctor, over cap) → do NOT act; escalate to the caregiver,\n  or to the backup if the caregiver is away.\n- Away mode: an away caregiver is travelling but still reads WhatsApp. Routine care continues as normal\n  (notify_caregiver first, then act); only new things go to the backup.\n- Never diagnose or interpret test results. You may suggest the caregiver \"mention a trend to the doctor\".\n- The elderly parent is told ONLY about completed outcomes: notify_parent is the last step, runs after\n  delivery, and describes only what has already happened. Never send them pending actions.\n- Use only these tools, with these arguments:\n  notify_caregiver { message, hold_window_min }\n  escalate_to_backup { message }\n  book_appointment { via: \"gnani_call\", doctor, pref }\n  create_order { via: \"pinelabs\", pharmacy, medicine, amount_inr }\n  route_delivery { via: \"delhivery\", pincode }\n  notify_parent { via: \"gnani_tts\", lang, message }\n\nReturn ONLY JSON, with the plan steps listed in the order you will run them:\n{\n  \"reasoning\": [\"short sentence\", \"...\"],\n  \"decision\": \"act_and_inform\" | \"escalate\",\n  \"plan\": [{ \"step\": \"<tool>\", ...args }]\n}"
       },
       {
         "role": "user",
@@ -20,20 +20,19 @@
       }
     ]
   },
-  "raw": "{\n  \"reasoning\": [\n    \"The prescription for Rosuvastatin 10mg is new, as Maa has not taken it before.\",\n    \"New medications require caregiver approval or escalation to backup when the caregiver is away.\",\n    \"Pursharth, the caregiver, is currently away until Sun 11 Oct, so immediate action cannot wait for him.\",\n    \"Therefore, this must be escalated to the backup contact, Rohan, for approval.\"\n  ],\n  \"decision\": \"escalate\",\n  \"plan\": [\n    {\n      \"step\": \"escalate_to_backup\",\n      \"backup_name\": \"Rohan\",\n      \"issue\": \"New prescription for Rosuvastatin 10mg from Dr. Rao. Requires approval before proceeding with order.\"\n    }\n  ]\n}",
+  "raw": "{\n  \"reasoning\": [\n    \"The prescription for Rosuvastatin 10mg is new, not a refill of an existing medicine.\",\n    \"New medicines require caregiver approval or escalation to backup when caregiver is away.\",\n    \"Caregiver Pursharth is currently away until 11 Oct, so escalation must go to backup Rohan.\",\n    \"Do not create order or notify parent until approved.\"\n  ],\n  \"decision\": \"escalate\",\n  \"plan\": [\n    {\n      \"step\": \"escalate_to_backup\",\n      \"message\": \"New prescription for Maa: Rosuvastatin 10mg from Dr. Rao. Needs approval for order. Usual pharmacy is Apollo Lucknow. Monthly cap is ₹3,000 (₹1,000 used). Please advise if we should proceed.\"\n    }\n  ]\n}",
   "parsed": {
     "reasoning": [
-      "The prescription for Rosuvastatin 10mg is new, as Maa has not taken it before.",
-      "New medications require caregiver approval or escalation to backup when the caregiver is away.",
-      "Pursharth, the caregiver, is currently away until Sun 11 Oct, so immediate action cannot wait for him.",
-      "Therefore, this must be escalated to the backup contact, Rohan, for approval."
+      "The prescription for Rosuvastatin 10mg is new, not a refill of an existing medicine.",
+      "New medicines require caregiver approval or escalation to backup when caregiver is away.",
+      "Caregiver Pursharth is currently away until 11 Oct, so escalation must go to backup Rohan.",
+      "Do not create order or notify parent until approved."
     ],
     "decision": "escalate",
     "plan": [
       {
         "step": "escalate_to_backup",
-        "backup_name": "Rohan",
-        "issue": "New prescription for Rosuvastatin 10mg from Dr. Rao. Requires approval before proceeding with order."
+        "message": "New prescription for Maa: Rosuvastatin 10mg from Dr. Rao. Needs approval for order. Usual pharmacy is Apollo Lucknow. Monthly cap is ₹3,000 (₹1,000 used). Please advise if we should proceed."
       }
     ]
   },
@@ -43,7 +42,7 @@
         "index": 0,
         "message": {
           "role": "assistant",
-          "content": "{\n  \"reasoning\": [\n    \"The prescription for Rosuvastatin 10mg is new, as Maa has not taken it before.\",\n    \"New medications require caregiver approval or escalation to backup when the caregiver is away.\",\n    \"Pursharth, the caregiver, is currently away until Sun 11 Oct, so immediate action cannot wait for him.\",\n    \"Therefore, this must be escalated to the backup contact, Rohan, for approval.\"\n  ],\n  \"decision\": \"escalate\",\n  \"plan\": [\n    {\n      \"step\": \"escalate_to_backup\",\n      \"backup_name\": \"Rohan\",\n      \"issue\": \"New prescription for Rosuvastatin 10mg from Dr. Rao. Requires approval before proceeding with order.\"\n    }\n  ]\n}",
+          "content": "{\n  \"reasoning\": [\n    \"The prescription for Rosuvastatin 10mg is new, not a refill of an existing medicine.\",\n    \"New medicines require caregiver approval or escalation to backup when caregiver is away.\",\n    \"Caregiver Pursharth is currently away until 11 Oct, so escalation must go to backup Rohan.\",\n    \"Do not create order or notify parent until approved.\"\n  ],\n  \"decision\": \"escalate\",\n  \"plan\": [\n    {\n      \"step\": \"escalate_to_backup\",\n      \"message\": \"New prescription for Maa: Rosuvastatin 10mg from Dr. Rao. Needs approval for order. Usual pharmacy is Apollo Lucknow. Monthly cap is ₹3,000 (₹1,000 used). Please advise if we should proceed.\"\n    }\n  ]\n}",
           "refusal": null,
           "annotations": null,
           "audio": null,
@@ -57,16 +56,16 @@
         "routed_experts": null
       }
     ],
-    "created": 1791055348,
-    "id": "chatcmpl-68b500d2-99b8-4fe4-b9eb-c504b54025d4",
+    "created": 1791063394,
+    "id": "chatcmpl-467951b8-5f45-44e5-8a1d-9b85f85f4565",
     "model": "qwen3-235b-a22b-instruct-2507",
     "object": "chat.completion",
     "service_tier": null,
     "system_fingerprint": null,
     "usage": {
-      "prompt_tokens": 464,
-      "total_tokens": 630,
-      "completion_tokens": 166,
+      "prompt_tokens": 512,
+      "total_tokens": 692,
+      "completion_tokens": 180,
       "prompt_tokens_details": null
     }
   }

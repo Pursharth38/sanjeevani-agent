@@ -317,7 +317,12 @@ export async function run(ctx) {
   }
   // The clinic call: placed through the API in live mode when a platform key exists. Without one, the
   // call is triggered by hand from the Gnani dashboard and the saved real call is used, else the fixture.
-  if (ctx.mode === 'live' && process.env.INYA_API_KEY) return callEvents(await placeCall(ctx.emit));
+  if (ctx.mode === 'live' && process.env.INYA_API_KEY) {
+    const out = callEvents(await placeCall(ctx.emit));
+    // The trigger row was already streamed through ctx.emit; don't return it twice.
+    if (ctx.emit) out.events = out.events.filter((e) => e.id !== 'evt_08g1');
+    return out;
+  }
   const record = readJson('cache/gnani_call.json');
   return record ? callEvents(record) : readJson('fixtures/gnani_call.json');
 }

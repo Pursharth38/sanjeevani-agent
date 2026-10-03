@@ -251,7 +251,8 @@ async function runManual(key, entry, ctx, wait) {
   }
 
   for (const id of acks.keys()) if (id.startsWith(`${key}:`)) acks.delete(id);
-  return { events, statePatch: {}, artifacts: {}, halt };
+  // Events already streamed through ctx.emit are not returned again (the orchestrator shows returned ones).
+  return { events: ctx.emit ? [] : events, statePatch: {}, artifacts: {}, halt, result: { halt } };
 }
 
 export async function run(ctx) {
