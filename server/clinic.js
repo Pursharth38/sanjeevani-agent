@@ -106,7 +106,7 @@ export function createClinic({ root, getState, readBody, sendJson, onPrescriptio
     return { member, state };
   }
   const publicPatient = (m, state) => ({
-    abha: m.abha, name: m.full, family_name: m.name, age: m.age, sex: m.sex === 'F' ? 'Female' : m.sex === 'M' ? 'Male' : '—', city: m.city,
+    abha: m.abha, name: m.full, age: m.age, sex: m.sex === 'F' ? 'Female' : m.sex === 'M' ? 'Male' : '—', city: m.city,
     family: state.caregiver.family, caregiver: state.caregiver.name,
     current_medicines: m.medicines.map((md) => `${md.name} · ${md.freq}`)
   });

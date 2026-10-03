@@ -83,7 +83,7 @@ export function buildPrescriptionBundle(input) {
       resourceType: 'MedicationRequest', id, meta: { profile: [`${PROFILE}/MedicationRequest`] },
       status: 'active', intent: 'order',
       medicationCodeableConcept: { text: md.name },
-      subject: { reference: urn(patientId), display: p.name || p.full },
+      subject: { reference: urn(patientId), display: p.full },
       authoredOn: authored,
       requester: { reference: urn(practitionerId), display: dr.name },
       dosageInstruction: [{
@@ -97,7 +97,7 @@ export function buildPrescriptionBundle(input) {
   const photoDoc = photo && {
     resourceType: 'DocumentReference', id: uuidFor('DocumentReference', patientId, photo.sha1), meta: { profile: [`${PROFILE}/DocumentReference`] },
     status: 'current', type: { text: 'Prescription photo' },
-    subject: { reference: urn(patientId), display: p.name || p.full }, date: timestamp,
+    subject: { reference: urn(patientId), display: p.full }, date: timestamp,
     author: [{ reference: urn(practitionerId), display: dr.name }],
     content: [{ attachment: { contentType: photo.contentType, size: photo.size, hash: photo.sha1, title: photo.title } }]
   };
@@ -107,7 +107,7 @@ export function buildPrescriptionBundle(input) {
   const composition = {
     resourceType: 'Composition', id: compositionId, meta: { profile: [`${PROFILE}/PrescriptionRecord`] },
     status: 'final', type: { coding: [PRESCRIPTION_RECORD], text: 'Prescription record' },
-    subject: { reference: urn(patientId), display: p.name || p.full }, date: timestamp,
+    subject: { reference: urn(patientId), display: p.full }, date: timestamp,
     author: [{ reference: urn(practitionerId), display: dr.name }],
     ...(organization ? { custodian: { reference: urn(orgId), display: org.name } } : {}),
     title: 'Prescription record',

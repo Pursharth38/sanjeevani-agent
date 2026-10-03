@@ -95,7 +95,7 @@
   });
   function renderPatient(p) {
     $('#pInitial').textContent = initials(p.name);
-    $('#pName').textContent = `${p.name} (${p.family_name})`;
+    $('#pName').textContent = p.name;
     $('#pMeta').textContent = `${p.age} · ${p.sex} · ${p.city}`;
     $('#pFamily').textContent = `${p.family} · caregiver ${p.caregiver}`;
     $('#pAbha').textContent = `ABHA ${p.abha}`;
@@ -129,7 +129,7 @@
   /* ---------------- prescription ---------------- */
   $('#toRx').addEventListener('click', () => {
     if (!ui.patient) return;
-    $('#rxFor').textContent = `${ui.patient.name} (${ui.patient.family_name})`;
+    $('#rxFor').textContent = ui.patient.name;
     $('#rxAbha').textContent = `ABHA ${ui.patient.abha}`;
     $('#rxDate').value = todayIst();
     $('#rxDate').max = todayIst();
@@ -270,7 +270,7 @@
     const nm = out.new_medicines || [];
     $('#newMeds').hidden = !nm.length;
     if (nm.length) {
-      $('#newMeds').textContent = `${nm.join(', ')} ${nm.length === 1 ? 'is' : 'are'} new for ${ui.patient.family_name}. Sanjeevani will ask the family before adding ${nm.length === 1 ? 'it' : 'them'} to refills; nothing is ordered until then.`;
+      $('#newMeds').textContent = `${nm.join(', ')} ${nm.length === 1 ? 'is' : 'are'} new for ${ui.patient.name}. Sanjeevani will ask the family before adding ${nm.length === 1 ? 'it' : 'them'} to refills; nothing is ordered until then.`;
     }
     if (r.photo_id) { $('#donePhoto').src = `/api/clinic/photo/${r.photo_id}`; $('#donePhoto').hidden = false; }
     else { $('#donePhoto').hidden = true; $('#donePhoto').removeAttribute('src'); }
