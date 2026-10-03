@@ -1,0 +1,59 @@
+{
+  "note": "WhatsApp messages per beat, wording from the demo plan section 5. Steps run in order. from=sanjeevani: the teammate sends it from the 'Sanjeevani' number. from=caregiver: Pursharth types it on his phone, and the cue page shows 'Waiting for caregiver reply'. Weekday placeholders are filled in by the cue page from the dates in vars.",
+  "vars": {
+    "appt": "2026-10-10T11:00:00+05:30",
+    "return": "2026-10-11T00:00:00+05:30"
+  },
+  "beats": {
+    "0": { "title": "Reset", "steps": [] },
+    "1": {
+      "title": "Documents received",
+      "steps": [
+        { "from": "caregiver", "action": "forward the 4 documents to Sanjeevani" },
+        { "from": "sanjeevani", "text": "Got 4 documents for Maa. Reading them now 📄" }
+      ]
+    },
+    "2": { "title": "Onboarding animation", "steps": [] },
+    "3": {
+      "title": "Unclear field",
+      "steps": [
+        { "from": "sanjeevani", "text": "One medicine name on Dr. Mehta's prescription is unclear. Is it *Amlodipine* or *Amlokind*?", "attach": ["data/docs/crop_amlodipine.png"] },
+        { "from": "caregiver", "text": "Amlodipine" }
+      ]
+    },
+    "4": {
+      "title": "Away mode",
+      "steps": [
+        { "from": "caregiver", "text": "Flying to Delhi, back {{return_weekday}}" },
+        { "from": "sanjeevani", "text": "Got it ✈ Routine refills continue within your limits. Anything new goes to Rohan. Safe travels." }
+      ]
+    },
+    "5": { "title": "Trigger", "steps": [] },
+    "6": { "title": "Agent plan", "steps": [] },
+    "7": {
+      "title": "Trust message",
+      "steps": [
+        { "from": "sanjeevani", "text": "Maa's Amlodipine runs out in 3 days. I'll reorder from Apollo Pharmacy (₹184, within your ₹3,000 limit) and book Dr. Mehta for {{appt_weekday}}. Reply HOLD in the next 10 minutes to stop me." }
+      ],
+      "hold": true,
+      "hint": "Caregiver does NOT reply. No HOLD, so the agent proceeds."
+    },
+    "8": { "title": "Book appointment", "steps": [] },
+    "9": { "title": "Order + payment", "steps": [] },
+    "10": { "title": "Route delivery", "steps": [] },
+    "11": { "title": "Delivered", "steps": [] },
+    "12": {
+      "title": "Maa informed",
+      "steps": [
+        { "from": "sanjeevani", "text": "Maa's medicine was delivered ✅. I let her know. Here's what she heard 🔊", "attach": ["data/audio/maa_voice_note.mp3"] }
+      ]
+    },
+    "13": {
+      "title": "Caregiver lands",
+      "steps": [
+        { "from": "caregiver", "text": "Landed" },
+        { "from": "sanjeevani", "text": "Welcome back! While you were away: medicine reordered and delivered, Dr. Mehta booked for {{appt_wd}} {{appt_time}}, Maa informed. 0 things missed. Nothing needs you right now." }
+      ]
+    }
+  }
+}

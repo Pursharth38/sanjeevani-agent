@@ -1,0 +1,38 @@
+{
+  "fixture": true,
+  "note": "FAKE placeholder for K's console. Text is the plan's target reasoning, NOT model output. Replaced by cache/hf_reason.json (first valid real run, unedited) once P4 runs.",
+  "events": [
+    {
+      "id": "evt_0601",
+      "beat": 6,
+      "t": "2026-10-06T09:58:20+05:30",
+      "source": "hf",
+      "label": "LIVE",
+      "type": "stream",
+      "title": "[FIXTURE] Reasoning · Hugging Face · Qwen/Qwen2.5-7B-Instruct",
+      "body": "Recorded model run",
+      "stream": "Amlodipine 5mg for Maa: 3 days of stock left. Usual pharmacy: Apollo, Lucknow. Price ₹184, within the ₹3,000 monthly mandate (₹1,000 used).\nPursharth is away until Sunday. This is a routine refill of an existing prescription at the usual pharmacy, inside his limits, so I can act after informing him. I'm not escalating to Rohan.\nDr. Mehta follow-up is due, and HbA1c has risen across the last 3 readings. I'll book the earliest Saturday slot and add a note to mention the trend. I won't interpret the result.\nMaa should hear only the outcome, after delivery. No pending-action messages to her."
+    },
+    {
+      "id": "evt_0602",
+      "beat": 6,
+      "t": "2026-10-06T09:58:31+05:30",
+      "source": "hf",
+      "label": "LIVE",
+      "type": "plan",
+      "title": "[FIXTURE] Plan · act_and_inform · 5 steps",
+      "json": {
+        "decision": "act_and_inform",
+        "plan": [
+          { "step": "notify_caregiver", "hold_window_min": 10 },
+          { "step": "book_appointment", "via": "gnani_call", "target": "Dr. Mehta clinic", "pref": "Saturday AM" },
+          { "step": "create_order", "via": "pinelabs", "amount_inr": 184, "within_mandate": true },
+          { "step": "route_delivery", "via": "delhivery", "pincode": "226001" },
+          { "step": "notify_parent", "via": "gnani_tts", "lang": "hi-IN", "when": "after_delivery" }
+        ]
+      }
+    }
+  ],
+  "statePatch": {},
+  "artifacts": {}
+}

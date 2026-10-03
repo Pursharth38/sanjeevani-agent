@@ -1,0 +1,79 @@
+{
+  "fixture": true,
+  "note": "FAKE placeholder for K's console. Replaced by cache/gnani_call.json (real call transcript) once P1 runs.",
+  "events": [
+    {
+      "id": "evt_0801",
+      "beat": 8,
+      "t": "2026-10-06T10:09:02+05:30",
+      "source": "gnani",
+      "label": "LIVE",
+      "type": "info",
+      "title": "[FIXTURE] gnani.call → Dr. Mehta clinic",
+      "body": "Outbound call · +91 ••••• ••••0"
+    },
+    {
+      "id": "evt_0802",
+      "beat": 8,
+      "t": "2026-10-06T10:09:05+05:30",
+      "source": "gnani",
+      "label": "LIVE",
+      "type": "transcript",
+      "title": "[FIXTURE] Call transcript",
+      "lines": [
+        {
+          "speaker": "Agent",
+          "text": "Namaste, I'm calling on behalf of Mrs. Sharma, 68, for a cardiology follow-up with Dr. Mehta."
+        },
+        {
+          "speaker": "Clinic",
+          "text": "Yes, when would she like to come?"
+        },
+        {
+          "speaker": "Agent",
+          "text": "The earliest Saturday morning slot, please."
+        },
+        {
+          "speaker": "Clinic",
+          "text": "Saturday 10th at 11 am is available."
+        },
+        {
+          "speaker": "Agent",
+          "text": "Please book that. Saturday 10 October, 11 am, for Mrs. Sharma."
+        },
+        {
+          "speaker": "Clinic",
+          "text": "Done, she's booked."
+        },
+        {
+          "speaker": "Agent",
+          "text": "Thank you very much."
+        }
+      ]
+    },
+    {
+      "id": "evt_0803",
+      "beat": 8,
+      "t": "2026-10-06T10:10:41+05:30",
+      "source": "gnani",
+      "label": "LIVE",
+      "type": "audio",
+      "title": "[FIXTURE] Call recording",
+      "src": "data/audio/clinic_call.mp3"
+    },
+    {
+      "id": "evt_0804",
+      "beat": 8,
+      "t": "2026-10-06T10:10:42+05:30",
+      "source": "gnani",
+      "label": "LIVE",
+      "type": "info",
+      "title": "[FIXTURE] Slot confirmed · Sat 10 Oct 11:00",
+      "body": "Dr. Mehta · Cardiology"
+    }
+  ],
+  "statePatch": {},
+  "artifacts": {
+    "audio": "data/audio/clinic_call.mp3"
+  }
+}

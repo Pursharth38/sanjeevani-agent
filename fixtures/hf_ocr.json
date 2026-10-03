@@ -1,0 +1,24 @@
+{
+  "fixture": true,
+  "note": "FAKE placeholder for K's console. Replaced by cache/hf_ocr.json (real model output) once P3 runs. Never feeds the dashboard.",
+  "events": [
+    {
+      "id": "evt_0201",
+      "beat": 2,
+      "t": "2026-10-03T10:05:20+05:30",
+      "source": "hf",
+      "label": "SAMPLE RUN",
+      "type": "ocr_card",
+      "title": "[FIXTURE] Sample run · Hugging Face · Qwen/Qwen2.5-VL-7B-Instruct",
+      "body": "Pipeline proof — the demo data on the dashboard is illustrative.",
+      "src": "data/docs/prescription.jpg",
+      "json": [
+        { "name": "Telmisartan", "dose": "40mg", "frequency": "OD", "duration": "30 days", "confidence_0_to_1": 0.95 },
+        { "name": "Metformin", "dose": "1000mg", "frequency": "BD", "duration": "30 days", "confidence_0_to_1": 0.93 },
+        { "name": "Amlodipine", "dose": "5mg", "frequency": "OD", "duration": "30 days", "confidence_0_to_1": 0.62 }
+      ]
+    }
+  ],
+  "statePatch": {},
+  "artifacts": { "image": "data/docs/prescription.jpg" }
+}
