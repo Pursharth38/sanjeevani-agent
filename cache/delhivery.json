@@ -1,0 +1,89 @@
+{
+  "saved_at": "2026-10-03T19:05:44.100Z",
+  "recorded_at": "2026-10-03T19:05:44.099Z",
+  "serviceability": "simulated",
+  "events": [
+    {
+      "dt_ms": 1,
+      "source": "agent",
+      "label": "LIVE",
+      "type": "request",
+      "title": "pincode lookup · India Post · 226001",
+      "json": {
+        "method": "GET",
+        "url": "https://api.postalpincode.in/pincode/226001"
+      }
+    },
+    {
+      "dt_ms": 1197,
+      "source": "agent",
+      "label": "LIVE",
+      "type": "response",
+      "title": "226001 · Lucknow, Uttar Pradesh · 10 post offices",
+      "json": {
+        "Status": "Success",
+        "Message": "Number of pincode(s) found:10",
+        "PostOffice": [
+          {
+            "Name": "A P Sabha",
+            "BranchType": "Sub Post Office",
+            "District": "Lucknow",
+            "State": "Uttar Pradesh",
+            "Pincode": "226001"
+          },
+          {
+            "Name": "Canal Colony",
+            "BranchType": "Sub Post Office",
+            "District": "Lucknow",
+            "State": "Uttar Pradesh",
+            "Pincode": "226001"
+          },
+          {
+            "Name": "CPMG Campus",
+            "BranchType": "Sub Post Office",
+            "District": "Lucknow",
+            "State": "Uttar Pradesh",
+            "Pincode": "226001"
+          }
+        ]
+      }
+    },
+    {
+      "dt_ms": 1197,
+      "source": "delhivery",
+      "label": "SIMULATED",
+      "type": "info",
+      "title": "delhivery serviceability · 226001 · simulated",
+      "body": "No Delhivery API token; the pincode above is real, this check is simulated"
+    },
+    {
+      "dt_ms": 2400,
+      "source": "delhivery",
+      "label": "SIMULATED",
+      "type": "response",
+      "title": "Lucknow serviceable for prepaid · simulated",
+      "json": {
+        "simulated": true,
+        "pincode": "226001",
+        "district": "Lucknow",
+        "state": "Uttar Pradesh",
+        "prepaid": true
+      }
+    },
+    {
+      "dt_ms": 2400,
+      "source": "agent",
+      "label": "SIMULATED",
+      "type": "info",
+      "title": "route = Delhivery Express",
+      "body": "Apollo Pharmacy, Lucknow → Maa · Lucknow"
+    }
+  ],
+  "result": {
+    "serviceable": true,
+    "route": "delhivery",
+    "pincode": "226001",
+    "district": "Lucknow",
+    "verified_by": "simulated"
+  }
+}

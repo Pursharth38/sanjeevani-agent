@@ -311,7 +311,8 @@ async function runStep(step, facts, token) {
       facts.paid = true;
       return { ok: true };
     case 'route_delivery':
-      if (res.serviceable === false) return { ok: false, reason: `pincode ${step.pincode} not serviceable` };
+      // A local-partner route still delivers; only "no route at all" (e.g. unknown pincode) fails.
+      if (res.serviceable === false && !res.route) return { ok: false, reason: `pincode ${step.pincode} not serviceable${res.reason ? ` (${res.reason})` : ''}` };
       facts.routed = true;
       return { ok: true };
     default:

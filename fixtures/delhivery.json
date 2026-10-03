@@ -3,7 +3,7 @@
   "events": [
     {
       "source": "delhivery",
-      "label": "CACHED",
+      "label": "SIMULATED",
       "type": "request",
       "title": "delhivery.pincode 226001",
       "json": {
@@ -16,7 +16,7 @@
     },
     {
       "source": "delhivery",
-      "label": "CACHED",
+      "label": "SIMULATED",
       "type": "response",
       "title": "226001 serviceable · Lucknow",
       "json": {
